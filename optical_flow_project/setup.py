@@ -44,7 +44,8 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'optical-flow=src.main:main',
+            # Note: Use run.py directly for development
+            # 'optical-flow=src.main:main',
         ],
     },
     include_package_data=True,

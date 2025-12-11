@@ -66,6 +66,8 @@ cd Kiti/optical_flow_project
 pip install -r requirements.txt
 ```
 
+**Note**: The project is designed to be run using `run.py` which handles module imports correctly. If you want to install it as a package, you can use `pip install -e .`, but the recommended approach is to use `run.py` directly.
+
 3. (Optional) Install as a package:
 ```bash
 pip install -e .
@@ -206,6 +208,16 @@ Example `pipeline_results.json`:
 ```
 
 ## Technical Details
+
+### Architecture Notes
+
+The project uses a simple, flat module structure within the `src/` directory. This design choice:
+- Makes it easy to run directly with `python run.py`
+- Avoids complex package installation for quick usage
+- Allows modules to import each other cleanly
+- The `run.py` script adds `src/` to the Python path before importing modules
+
+For production deployment, you can reorganize into a proper package structure or use the current structure with the provided `run.py` entry point.
 
 ### Video Processing
 - Supports multiple video formats (MP4, AVI, MOV, MKV)
