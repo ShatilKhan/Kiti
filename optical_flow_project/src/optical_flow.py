@@ -158,7 +158,7 @@ class OpticalFlowAnalyzer:
         Returns:
             List[Tuple[int, int]]: Predicted (x, y) positions
         """
-        if len(self.trajectory) < 10:
+        if len(self.trajectory) < settings.MIN_TRAJECTORY_LENGTH:
             return []
         
         num_frames = num_frames or settings.PREDICTION_FRAMES
@@ -237,7 +237,7 @@ class OpticalFlowAnalyzer:
         # Draw flow vectors
         for (x1, y1), (x2, y2) in lines:
             cv2.arrowedLine(vis_frame, (x1, y1), (x2, y2), (0, 255, 0), 1, 
-                          cv2.LINE_AA, tipLength=0.3)
+                          cv2.LINE_AA, tipLength=settings.ARROW_TIP_LENGTH)
         
         return vis_frame
     

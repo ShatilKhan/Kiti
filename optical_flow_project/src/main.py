@@ -148,7 +148,7 @@ class OpticalFlowPipeline:
                     out.write(processed_frame)
                     frames_processed += 1
                     
-                    if frames_processed % 30 == 0:
+                    if frames_processed % settings.PROGRESS_REPORT_INTERVAL == 0:
                         logger.info(f"Processed {frames_processed} frames")
                 
                 out.release()

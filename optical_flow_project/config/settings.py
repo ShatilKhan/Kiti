@@ -46,6 +46,13 @@ class Settings:
     # Trajectory prediction settings
     TRAJECTORY_MAX_LENGTH = 30  # Maximum trajectory history
     PREDICTION_FRAMES = 30  # Number of frames to predict ahead
+    MIN_TRAJECTORY_LENGTH = 10  # Minimum trajectory points for prediction
+    
+    # Visualization settings
+    ARROW_TIP_LENGTH = 0.3  # Arrow tip length for flow visualization
+    
+    # Progress reporting
+    PROGRESS_REPORT_INTERVAL = 30  # Report progress every N frames
     
     # Output settings
     OUTPUT_VIDEO_CODEC = 'mp4v'
