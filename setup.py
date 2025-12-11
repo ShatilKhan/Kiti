@@ -42,12 +42,6 @@ setup(
     ],
     python_requires='>=3.8',
     install_requires=requirements,
-    entry_points={
-        'console_scripts': [
-            # Use run.py directly for development
-            # 'kiti=src.main:main',
-        ],
-    },
     include_package_data=True,
     package_data={
         'src': ['config/*.py'],

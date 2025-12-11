@@ -59,6 +59,11 @@ class Settings:
     OUTPUT_VIDEO_FPS = 20
     OUTPUT_JSON_INDENT = 2
     
+    # Output filenames
+    ANNOTATED_VIDEO_FILENAME = "annotated_video.mp4"
+    OPTICAL_FLOW_VIDEO_FILENAME = "optical_flow_prediction.mp4"
+    PIPELINE_RESULTS_FILENAME = "pipeline_results.json"
+    
     # Logging settings
     LOG_LEVEL = "INFO"
     LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

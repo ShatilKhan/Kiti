@@ -200,16 +200,16 @@ class OpticalFlowPipeline:
         if run_flow:
             input_video = None
             if run_detection and results['detection_success']:
-                input_video = str(self.output_dir / "annotated_video.mp4")
+                input_video = str(self.output_dir / settings.ANNOTATED_VIDEO_FILENAME)
             
             results['optical_flow_success'] = self.run_optical_flow(
                 input_video=input_video,
-                output_filename="optical_flow_prediction.mp4",
+                output_filename=settings.OPTICAL_FLOW_VIDEO_FILENAME,
                 use_kalman=use_kalman
             )
         
         # Save results
-        results_path = self.output_dir / "pipeline_results.json"
+        results_path = self.output_dir / settings.PIPELINE_RESULTS_FILENAME
         with open(results_path, 'w') as f:
             json.dump(results, f, indent=settings.OUTPUT_JSON_INDENT)
         

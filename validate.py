@@ -162,7 +162,7 @@ def check_requirements():
 def main():
     """Run all validations."""
     print("\n" + "=" * 70)
-    print("  OPTICAL FLOW PROJECT - VALIDATION REPORT")
+    print("  KITI AUTONOMOUS VEHICLE - VALIDATION REPORT")
     print("=" * 70 + "\n")
     
     structure_ok = check_project_structure()

@@ -113,7 +113,8 @@ class VideoProcessor:
             if not ret:
                 break
             
-            if (current_frame - start_frame) % frame_skip == 0:
+            frames_since_start = current_frame - start_frame
+            if frames_since_start % frame_skip == 0:
                 frame_filename = (f"{settings.FRAME_PREFIX}"
                                 f"{current_frame:0{settings.FRAME_PADDING}d}."
                                 f"{settings.FRAME_FORMAT}")
