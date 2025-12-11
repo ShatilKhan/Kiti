@@ -51,13 +51,8 @@ yolov*.pt
 runs/
 weights/
 
-# Jupyter
+# Jupyter checkpoints
 .ipynb_checkpoints
-*.ipynb
 
 # Test files
 test_videos/
-*.mp4
-*.avi
-*.mov
-*.mkv

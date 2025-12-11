@@ -1,5 +1,5 @@
 """
-Example usage of the Optical Flow Project modules.
+Example usage of the Kiti Autonomous Vehicle Project modules.
 
 This script demonstrates how to use the different modules in the project.
 Note: This requires a video file to be present in the data/ directory.
@@ -7,8 +7,10 @@ Note: This requires a video file to be present in the data/ directory.
 import sys
 from pathlib import Path
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent / 'src'))
+# Add src and project root to path
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / 'src'))
 
 from config.settings import settings
 

@@ -1,5 +1,5 @@
 """
-Setup script for Optical Flow Project
+Setup script for Kiti Autonomous Vehicle Project
 """
 from setuptools import setup, find_packages
 from pathlib import Path
@@ -18,11 +18,11 @@ if requirements_file.exists():
         requirements = [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
 setup(
-    name='optical-flow-project',
+    name='kiti-autonomous-vehicle',
     version='1.0.0',
     author='Kiti Team',
     author_email='',
-    description='Optical flow video processing pipeline for autonomous vehicles',
+    description='Kiti Autonomous Vehicle - Computer vision pipeline combining area marking and optical flow analysis',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/ShatilKhan/Kiti',
@@ -44,13 +44,13 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            # Note: Use run.py directly for development
-            # 'optical-flow=src.main:main',
+            # Use run.py directly for development
+            # 'kiti=src.main:main',
         ],
     },
     include_package_data=True,
     package_data={
         'src': ['config/*.py'],
     },
-    keywords='optical-flow computer-vision yolo autonomous-vehicles object-detection',
+    keywords='autonomous-vehicles optical-flow computer-vision yolo object-detection area-marking',
 )

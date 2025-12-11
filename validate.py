@@ -41,7 +41,8 @@ def check_project_structure():
             'README.md',
             'run.py',
             'data/README.md',
-            'output/README.md'
+            'output/README.md',
+            'Kiti_Autonomous_Vehicle.ipynb'
         ]
     }
     
