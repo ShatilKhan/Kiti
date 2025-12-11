@@ -32,6 +32,7 @@ def check_project_structure():
             'src/__init__.py',
             'src/main.py',
             'src/video_processor.py',
+            'src/area_marking.py',
             'src/object_detection.py',
             'src/optical_flow.py',
             'config/__init__.py',
@@ -41,8 +42,7 @@ def check_project_structure():
             'README.md',
             'run.py',
             'data/README.md',
-            'output/README.md',
-            'Kiti_Autonomous_Vehicle.ipynb'
+            'output/README.md'
         ]
     }
     
@@ -83,6 +83,7 @@ def validate_python_files():
         'src/__init__.py',
         'src/main.py',
         'src/video_processor.py',
+        'src/area_marking.py',
         'src/object_detection.py',
         'src/optical_flow.py',
         'config/__init__.py',

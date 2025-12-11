@@ -60,6 +60,7 @@ class Settings:
     OUTPUT_JSON_INDENT = 2
     
     # Output filenames
+    AREA_MARKED_VIDEO_FILENAME = "area_marked_video.mp4"
     ANNOTATED_VIDEO_FILENAME = "annotated_video.mp4"
     OPTICAL_FLOW_VIDEO_FILENAME = "optical_flow_prediction.mp4"
     PIPELINE_RESULTS_FILENAME = "pipeline_results.json"

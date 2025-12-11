@@ -1,11 +1,11 @@
 # Kiti - Autonomous Vehicle Computer Vision Pipeline
 
-Kiti is a production-ready Python project for autonomous vehicle computer vision tasks, combining **Area Marking**, **Object Detection**, and **Optical Flow** analysis with trajectory prediction.
+Kiti is a **production-ready Python project** for autonomous vehicle computer vision tasks, combining **Area Marking**, **Object Detection**, and **Optical Flow** analysis with trajectory prediction.
 
 ## Overview
 
 This project provides a complete pipeline for autonomous vehicle perception by:
-- **Defining a Region of Interest (ROI)** - Central 40% area marking for prioritized obstacle detection
+- **Area Marking & ROI Detection** - Define central 40% region of interest with motion-based obstacle detection
 - **Object Detection** - YOLO-based real-time object detection and classification
 - **Motion Analysis** - Optical flow for tracking moving objects
 - **Trajectory Prediction** - Linear Regression and Kalman Filter methods for path forecasting
@@ -13,12 +13,12 @@ This project provides a complete pipeline for autonomous vehicle perception by:
 ## Features
 
 - **Complete Vision Pipeline**: From video input to trajectory prediction
-- **Modular Architecture**: Clean separation of concerns with dedicated modules
+- **Modular Python Architecture**: Clean separation of concerns with dedicated modules
+- **Area Marking Module**: ROI definition with background subtraction for obstacle detection
 - **YOLO Integration**: State-of-the-art object detection using Ultralytics YOLOv8
 - **Optical Flow Analysis**: Motion detection using Farneback algorithm
 - **Dual Prediction Methods**: Linear Regression and Kalman Filter
-- **Jupyter Notebook**: Interactive notebook for experimentation (`Kiti_Autonomous_Vehicle.ipynb`)
-- **CLI Support**: Easy-to-use command-line interface
+- **CLI Support**: Full command-line interface for all operations
 
 ## Project Structure
 
@@ -26,18 +26,16 @@ This project provides a complete pipeline for autonomous vehicle perception by:
 Kiti/
 ├── src/                          # Python source modules
 │   ├── __init__.py              
-│   ├── main.py                  # Main pipeline orchestration
-│   ├── video_processor.py       # Video frame extraction
-│   ├── object_detection.py      # YOLO object detection
-│   └── optical_flow.py          # Optical flow analysis
+│   ├── main.py                  # Main pipeline orchestration (AutonomousVehiclePipeline)
+│   ├── video_processor.py       # Video frame extraction (VideoProcessor)
+│   ├── area_marking.py          # ROI & obstacle detection (AreaMarker)
+│   ├── object_detection.py      # YOLO object detection (ObjectDetector)
+│   └── optical_flow.py          # Optical flow analysis (OpticalFlowAnalyzer)
 ├── config/
 │   ├── __init__.py              
 │   └── settings.py              # Centralized configuration
 ├── data/                        # Input data directory
 ├── output/                      # Output directory
-├── Kiti_Autonomous_Vehicle.ipynb # Combined notebook
-├── Area_Marking.ipynb           # Original area marking notebook
-├── Kiti_Optical_flow.ipynb      # Original optical flow notebook
 ├── requirements.txt             # Python dependencies
 ├── run.py                       # CLI entry point
 ├── setup.py                     # Package setup
@@ -73,46 +71,68 @@ pip install -e .
 
 ## Usage
 
-### Jupyter Notebook (Recommended for experimentation)
-
-Open `Kiti_Autonomous_Vehicle.ipynb` in Jupyter or Google Colab for an interactive experience.
-
 ### Command Line Interface
 
 ```bash
 # Show help
 python run.py --help
 
-# Run full pipeline
+# Run full pipeline (area marking + YOLO detection + optical flow)
 python run.py --video data/your_video.mp4 --full
 
-# Extract frames only
-python run.py --video path/to/video.mp4 --extract-frames
+# Run area marking with obstacle detection only
+python run.py --video path/to/video.mp4 --area-marking
 
-# Run object detection
+# Run YOLO object detection only
 python run.py --video path/to/video.mp4 --detect
+
+# Run optical flow analysis only
+python run.py --video path/to/video.mp4 --flow
 
 # Run optical flow with Kalman filter
 python run.py --video path/to/video.mp4 --flow --kalman
+
+# Extract frames only
+python run.py --video path/to/video.mp4 --extract-frames
 ```
 
 ### Python API
 
 ```python
-from src.main import OpticalFlowPipeline
+from src.main import AutonomousVehiclePipeline
+from src.area_marking import AreaMarker
+from src.object_detection import ObjectDetector
+from src.optical_flow import OpticalFlowAnalyzer
 
-# Create pipeline
-pipeline = OpticalFlowPipeline('path/to/video.mp4', output_dir='output/')
+# Create full pipeline
+pipeline = AutonomousVehiclePipeline('path/to/video.mp4', output_dir='output/')
 
 # Run full pipeline
 results = pipeline.run_full_pipeline(
-    extract_frames_flag=False,
+    run_area_marking=True,
     run_detection=True,
     run_flow=True,
     use_kalman=True
 )
 
 print(results)
+
+# Or use individual modules
+from src.video_processor import VideoProcessor
+
+# Area marking example
+area_marker = AreaMarker(roi_start_ratio=0.3, roi_end_ratio=0.7)
+with VideoProcessor('video.mp4') as vp:
+    frames, obstacles = area_marker.process_video(vp, 'output/marked.mp4')
+
+# Object detection example
+detector = ObjectDetector()
+detector.load_model()
+detections = detector.detect(frame)
+
+# Optical flow example
+analyzer = OpticalFlowAnalyzer()
+processed_frame, results = analyzer.process_frame_with_prediction(frame, use_kalman=True)
 ```
 
 ## Configuration
