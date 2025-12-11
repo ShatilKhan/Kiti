@@ -1,18 +1,19 @@
 """
-Main application module for optical flow video processing pipeline.
-Orchestrates video processing, object detection, and optical flow analysis.
+Main application module for Kiti Autonomous Vehicle pipeline.
+Orchestrates video processing, area marking, object detection, and optical flow analysis.
 """
 import os
 import logging
 import argparse
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 import cv2
 
 from config.settings import settings
 from video_processor import VideoProcessor
+from area_marking import AreaMarker
 from object_detection import ObjectDetector
 from optical_flow import OpticalFlowAnalyzer
 
@@ -25,8 +26,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class OpticalFlowPipeline:
-    """Main pipeline for optical flow video processing."""
+class AutonomousVehiclePipeline:
+    """Main pipeline for autonomous vehicle video processing."""
     
     def __init__(self, video_path: str, output_dir: Optional[str] = None):
         """
@@ -41,6 +42,7 @@ class OpticalFlowPipeline:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         self.video_processor = VideoProcessor(video_path)
+        self.area_marker = AreaMarker()
         self.object_detector = ObjectDetector()
         self.optical_flow = OpticalFlowAnalyzer()
         
@@ -65,6 +67,40 @@ class OpticalFlowPipeline:
         
         logger.info(f"Frame extraction complete: {count} frames")
         return count
+    
+    def run_area_marking(self, output_filename: str = "area_marked_video.mp4",
+                         detect_obstacles: bool = True) -> Tuple[bool, int]:
+        """
+        Run area marking with optional obstacle detection.
+        
+        Args:
+            output_filename: Name of output video file
+            detect_obstacles: Whether to detect obstacles in ROI
+            
+        Returns:
+            Tuple[bool, int]: (success, obstacles_detected)
+        """
+        logger.info("Starting area marking...")
+        
+        output_path = self.output_dir / output_filename
+        
+        try:
+            with self.video_processor as vp:
+                frames, obstacles = self.area_marker.process_video(
+                    vp, str(output_path),
+                    draw_roi=True,
+                    detect_obstacles=detect_obstacles
+                )
+            
+            if frames > 0:
+                logger.info(f"Area marking complete: {frames} frames, {obstacles} obstacles")
+                return True, obstacles
+            else:
+                logger.error("Area marking failed")
+                return False, 0
+        except Exception as e:
+            logger.error(f"Area marking failed: {e}")
+            return False, 0
     
     def run_object_detection(self, output_filename: str = "annotated_video.mp4") -> bool:
         """
@@ -161,6 +197,7 @@ class OpticalFlowPipeline:
             return False
     
     def run_full_pipeline(self, extract_frames_flag: bool = False,
+                         run_area_marking: bool = True,
                          run_detection: bool = True,
                          run_flow: bool = True,
                          use_kalman: bool = False) -> dict:
@@ -169,7 +206,8 @@ class OpticalFlowPipeline:
         
         Args:
             extract_frames_flag: Whether to extract frames
-            run_detection: Whether to run object detection
+            run_area_marking: Whether to run area marking with obstacle detection
+            run_detection: Whether to run YOLO object detection
             run_flow: Whether to run optical flow
             use_kalman: Whether to use Kalman filter
             
@@ -180,19 +218,27 @@ class OpticalFlowPipeline:
             'video_path': self.video_path,
             'output_dir': str(self.output_dir),
             'frames_extracted': 0,
+            'area_marking_success': False,
+            'obstacles_detected': 0,
             'detection_success': False,
             'optical_flow_success': False
         }
         
         logger.info("=" * 60)
-        logger.info("Starting full pipeline execution")
+        logger.info("Starting Kiti Autonomous Vehicle Pipeline")
         logger.info("=" * 60)
         
         # Extract frames if requested
         if extract_frames_flag:
             results['frames_extracted'] = self.extract_frames()
         
-        # Run object detection
+        # Run area marking with obstacle detection
+        if run_area_marking:
+            success, obstacles = self.run_area_marking()
+            results['area_marking_success'] = success
+            results['obstacles_detected'] = obstacles
+        
+        # Run YOLO object detection
         if run_detection:
             results['detection_success'] = self.run_object_detection()
         
@@ -200,16 +246,16 @@ class OpticalFlowPipeline:
         if run_flow:
             input_video = None
             if run_detection and results['detection_success']:
-                input_video = str(self.output_dir / "annotated_video.mp4")
+                input_video = str(self.output_dir / settings.ANNOTATED_VIDEO_FILENAME)
             
             results['optical_flow_success'] = self.run_optical_flow(
                 input_video=input_video,
-                output_filename="optical_flow_prediction.mp4",
+                output_filename=settings.OPTICAL_FLOW_VIDEO_FILENAME,
                 use_kalman=use_kalman
             )
         
         # Save results
-        results_path = self.output_dir / "pipeline_results.json"
+        results_path = self.output_dir / settings.PIPELINE_RESULTS_FILENAME
         with open(results_path, 'w') as f:
             json.dump(results, f, indent=settings.OUTPUT_JSON_INDENT)
         
@@ -224,21 +270,24 @@ class OpticalFlowPipeline:
 def main():
     """Main entry point for the application."""
     parser = argparse.ArgumentParser(
-        description="Optical Flow Video Processing Pipeline for Autonomous Vehicles",
+        description="Kiti Autonomous Vehicle - Complete Computer Vision Pipeline",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run full pipeline on a video
+  # Run full pipeline on a video (area marking + detection + optical flow)
   python main.py --video path/to/video.mp4 --full
   
-  # Extract frames only
-  python main.py --video path/to/video.mp4 --extract-frames
+  # Run area marking with obstacle detection only
+  python main.py --video path/to/video.mp4 --area-marking
   
-  # Run object detection only
+  # Run YOLO object detection only
   python main.py --video path/to/video.mp4 --detect
   
   # Run optical flow with Kalman filter
   python main.py --video path/to/video.mp4 --flow --kalman
+  
+  # Extract frames only
+  python main.py --video path/to/video.mp4 --extract-frames
   
   # Custom output directory
   python main.py --video path/to/video.mp4 --full --output /path/to/output
@@ -252,13 +301,15 @@ Examples:
     
     # Processing modes
     parser.add_argument('--full', action='store_true',
-                       help='Run full pipeline (detection + optical flow)')
+                       help='Run full pipeline (area marking + detection + optical flow)')
     parser.add_argument('--extract-frames', action='store_true',
                        help='Extract frames from video')
+    parser.add_argument('--area-marking', action='store_true',
+                       help='Run area marking with obstacle detection')
     parser.add_argument('--detect', action='store_true',
-                       help='Run object detection only')
+                       help='Run YOLO object detection')
     parser.add_argument('--flow', action='store_true',
-                       help='Run optical flow analysis only')
+                       help='Run optical flow analysis')
     
     # Options
     parser.add_argument('--kalman', action='store_true',
@@ -272,13 +323,14 @@ Examples:
     settings.ensure_directories()
     
     # Create pipeline
-    pipeline = OpticalFlowPipeline(args.video, args.output)
+    pipeline = AutonomousVehiclePipeline(args.video, args.output)
     
     # Determine what to run
     if args.full:
         # Run everything
         pipeline.run_full_pipeline(
             extract_frames_flag=args.extract_frames,
+            run_area_marking=True,
             run_detection=True,
             run_flow=True,
             use_kalman=args.kalman
@@ -288,6 +340,9 @@ Examples:
         if args.extract_frames:
             pipeline.extract_frames(frame_skip=args.frame_skip)
         
+        if args.area_marking:
+            pipeline.run_area_marking()
+        
         if args.detect:
             pipeline.run_object_detection()
         
@@ -295,7 +350,7 @@ Examples:
             pipeline.run_optical_flow(use_kalman=args.kalman)
         
         # If nothing specified, show help
-        if not any([args.extract_frames, args.detect, args.flow]):
+        if not any([args.extract_frames, args.area_marking, args.detect, args.flow]):
             parser.print_help()
 
 

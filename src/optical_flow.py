@@ -174,7 +174,7 @@ class OpticalFlowAnalyzer:
         model_y = LinearRegression().fit(times, ys)
         
         # Predict future positions
-        future_times = np.array([[self.frame_count + i] for i in range(1, num_frames + 1)])
+        future_times = np.arange(self.frame_count + 1, self.frame_count + num_frames + 1).reshape(-1, 1)
         pred_xs = model_x.predict(future_times).astype(int)
         pred_ys = model_y.predict(future_times).astype(int)
         

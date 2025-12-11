@@ -32,6 +32,7 @@ def check_project_structure():
             'src/__init__.py',
             'src/main.py',
             'src/video_processor.py',
+            'src/area_marking.py',
             'src/object_detection.py',
             'src/optical_flow.py',
             'config/__init__.py',
@@ -82,6 +83,7 @@ def validate_python_files():
         'src/__init__.py',
         'src/main.py',
         'src/video_processor.py',
+        'src/area_marking.py',
         'src/object_detection.py',
         'src/optical_flow.py',
         'config/__init__.py',
@@ -161,7 +163,7 @@ def check_requirements():
 def main():
     """Run all validations."""
     print("\n" + "=" * 70)
-    print("  OPTICAL FLOW PROJECT - VALIDATION REPORT")
+    print("  KITI AUTONOMOUS VEHICLE - VALIDATION REPORT")
     print("=" * 70 + "\n")
     
     structure_ok = check_project_structure()
