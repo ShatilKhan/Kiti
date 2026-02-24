@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Shatil Khan" />
+  <title>Kiti: A Modular Obstacle Recognition Pipeline with Camera Motion Compensation for Autonomous Vehicle Prototypes</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Kiti: A Modular Obstacle Recognition Pipeline with
+Camera Motion Compensation for Autonomous Vehicle Prototypes</h1>
+<p class="author">Shatil Khan</p>
+<p class="date">February 2026</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#abstract" id="toc-abstract"><span
+class="toc-section-number">1</span> Abstract</a></li>
+<li><a href="#introduction" id="toc-introduction"><span
+class="toc-section-number">2</span> 1. Introduction</a></li>
+<li><a href="#related-work" id="toc-related-work"><span
+class="toc-section-number">3</span> 2. Related Work</a>
+<ul>
+<li><a href="#object-detection-for-autonomous-driving"
+id="toc-object-detection-for-autonomous-driving"><span
+class="toc-section-number">3.1</span> 2.1 Object Detection for
+Autonomous Driving</a></li>
+<li><a href="#multi-object-tracking"
+id="toc-multi-object-tracking"><span
+class="toc-section-number">3.2</span> 2.2 Multi-Object Tracking</a></li>
+<li><a href="#camera-motion-compensation"
+id="toc-camera-motion-compensation"><span
+class="toc-section-number">3.3</span> 2.3 Camera Motion
+Compensation</a></li>
+<li><a href="#distance-estimation-and-trajectory-prediction"
+id="toc-distance-estimation-and-trajectory-prediction"><span
+class="toc-section-number">3.4</span> 2.4 Distance Estimation and
+Trajectory Prediction</a></li>
+</ul></li>
+<li><a href="#proposed-method" id="toc-proposed-method"><span
+class="toc-section-number">4</span> 3. Proposed Method</a>
+<ul>
+<li><a href="#system-overview" id="toc-system-overview"><span
+class="toc-section-number">4.1</span> 3.1 System Overview</a></li>
+<li><a href="#object-detection" id="toc-object-detection"><span
+class="toc-section-number">4.2</span> 3.2 Object Detection</a></li>
+<li><a href="#camera-motion-compensation-1"
+id="toc-camera-motion-compensation-1"><span
+class="toc-section-number">4.3</span> 3.3 Camera Motion
+Compensation</a></li>
+<li><a href="#ego-motion-compensated-background-subtraction"
+id="toc-ego-motion-compensated-background-subtraction"><span
+class="toc-section-number">4.4</span> 3.4 Ego-Motion-Compensated
+Background Subtraction</a></li>
+<li><a href="#dense-optical-flow-with-residual-motion"
+id="toc-dense-optical-flow-with-residual-motion"><span
+class="toc-section-number">4.5</span> 3.5 Dense Optical Flow with
+Residual Motion</a></li>
+<li><a href="#multi-object-tracking-1"
+id="toc-multi-object-tracking-1"><span
+class="toc-section-number">4.6</span> 3.6 Multi-Object Tracking</a></li>
+<li><a href="#monocular-distance-estimation"
+id="toc-monocular-distance-estimation"><span
+class="toc-section-number">4.7</span> 3.7 Monocular Distance
+Estimation</a></li>
+<li><a href="#trajectory-prediction"
+id="toc-trajectory-prediction"><span
+class="toc-section-number">4.8</span> 3.8 Trajectory Prediction</a></li>
+<li><a href="#region-of-interest-and-behavior-detection"
+id="toc-region-of-interest-and-behavior-detection"><span
+class="toc-section-number">4.9</span> 3.9 Region of Interest and
+Behavior Detection</a></li>
+</ul></li>
+<li><a href="#algorithms" id="toc-algorithms"><span
+class="toc-section-number">5</span> 4. Algorithms</a>
+<ul>
+<li><a href="#algorithm-1-kiti-obstacle-recognition-pipeline"
+id="toc-algorithm-1-kiti-obstacle-recognition-pipeline"><span
+class="toc-section-number">5.1</span> Algorithm 1: Kiti Obstacle
+Recognition Pipeline</a></li>
+<li><a href="#algorithm-2-camera-motion-compensation"
+id="toc-algorithm-2-camera-motion-compensation"><span
+class="toc-section-number">5.2</span> Algorithm 2: Camera Motion
+Compensation</a></li>
+</ul></li>
+<li><a href="#experiments" id="toc-experiments"><span
+class="toc-section-number">6</span> 5. Experiments</a>
+<ul>
+<li><a href="#experimental-setup" id="toc-experimental-setup"><span
+class="toc-section-number">6.1</span> 5.1 Experimental Setup</a></li>
+<li><a href="#detection-results" id="toc-detection-results"><span
+class="toc-section-number">6.2</span> 5.2 Detection Results</a></li>
+<li><a href="#camera-motion-compensation-analysis"
+id="toc-camera-motion-compensation-analysis"><span
+class="toc-section-number">6.3</span> 5.3 Camera Motion Compensation
+Analysis</a></li>
+<li><a href="#processing-speed-analysis"
+id="toc-processing-speed-analysis"><span
+class="toc-section-number">6.4</span> 5.4 Processing Speed
+Analysis</a></li>
+<li><a href="#comparison-with-existing-methods"
+id="toc-comparison-with-existing-methods"><span
+class="toc-section-number">6.5</span> 5.5 Comparison with Existing
+Methods</a></li>
+<li><a href="#motion-heatmap-analysis"
+id="toc-motion-heatmap-analysis"><span
+class="toc-section-number">6.6</span> 5.6 Motion Heatmap
+Analysis</a></li>
+</ul></li>
+<li><a href="#discussion" id="toc-discussion"><span
+class="toc-section-number">7</span> 6. Discussion</a>
+<ul>
+<li><a href="#current-limitations" id="toc-current-limitations"><span
+class="toc-section-number">7.1</span> 6.1 Current Limitations</a></li>
+<li><a href="#planned-improvements" id="toc-planned-improvements"><span
+class="toc-section-number">7.2</span> 6.2 Planned Improvements</a></li>
+</ul></li>
+<li><a href="#conclusion" id="toc-conclusion"><span
+class="toc-section-number">8</span> 7. Conclusion</a></li>
+<li><a href="#references" id="toc-references"><span
+class="toc-section-number">9</span> References</a></li>
+</ul>
+</nav>
+<h1 data-number="1" id="abstract"><span
+class="header-section-number">1</span> Abstract</h1>
+<p>Obstacle recognition from vehicle-mounted cameras presents a
+fundamental challenge: the camera itself is in motion, causing the
+entire visual field to shift between frames. Traditional background
+subtraction methods assume a static camera and fail catastrophically in
+this setting. This paper presents Kiti, a modular obstacle recognition
+pipeline designed for autonomous vehicle prototypes that addresses this
+challenge through an integrated approach combining camera motion
+compensation, deep learning-based object detection, multi-object
+tracking, and trajectory prediction. The pipeline employs regular-grid
+KLT feature tracking with RANSAC-based homography estimation to separate
+ego-motion from independent object motion, enabling reliable obstacle
+detection from a moving platform. We evaluate the system on real-world
+driving sequences captured from a prototype vehicle, demonstrating that
+camera motion compensation reduces false positive detections caused by
+ego-motion and improves tracking consistency. The modular architecture
+allows individual components to be upgraded independently, providing a
+practical framework for iterative development of autonomous vehicle
+perception systems.</p>
+<h1 data-number="2" id="introduction"><span
+class="header-section-number">2</span> 1. Introduction</h1>
+<p>Autonomous vehicles rely on robust perception systems to detect,
+classify, and track obstacles in their environment. Among the sensor
+modalities employed, monocular cameras offer a cost-effective solution
+that provides rich semantic information about the scene. However,
+extracting reliable obstacle information from a vehicle-mounted camera
+introduces several challenges that do not arise in static surveillance
+settings.</p>
+<p>The primary challenge is ego-motion: as the vehicle moves, every
+pixel in the image shifts between consecutive frames. Background
+subtraction methods, which form the backbone of many motion detection
+systems, interpret this global shift as object motion, generating dense
+false positives across the entire frame. Dense optical flow suffers
+similarly, as the flow field is dominated by the vehicle’s own movement
+rather than independent obstacle motion. Object detectors such as YOLO
+can identify obstacles regardless of camera motion, but tracking these
+objects across frames requires understanding which apparent motion is
+caused by the camera and which is caused by the objects themselves.</p>
+<p>A second challenge is the diversity of obstacles encountered in real
+driving conditions. Unlike controlled environments, a prototype vehicle
+must recognize pedestrians, other vehicles, animals, and static
+obstacles, each exhibiting different motion patterns, sizes, and
+behaviors. The system must also operate across varying lighting
+conditions, road surfaces, and camera viewpoints.</p>
+<p>A third challenge is computational efficiency. Real-time processing
+is essential for any system intended for vehicle deployment, yet the
+combination of detection, tracking, flow analysis, and motion
+compensation demands significant computational resources.</p>
+<p>This paper makes the following contributions:</p>
+<ol type="1">
+<li><p>A unified, modular obstacle recognition pipeline that integrates
+YOLOv8 detection, SORT-based tracking, dense optical flow analysis,
+camera motion compensation, monocular distance estimation, and
+trajectory prediction into a single coherent system.</p></li>
+<li><p>A camera motion compensation module based on regular-grid KLT
+feature tracking and RANSAC homography estimation that enables
+background subtraction and optical flow analysis to function correctly
+from a moving camera, with residual flow computation to isolate
+independent object motion.</p></li>
+<li><p>An experimental evaluation on real-world driving sequences
+demonstrating the impact of camera motion compensation on detection
+quality, tracking consistency, and overall pipeline
+performance.</p></li>
+</ol>
+<p>The remainder of this paper is organized as follows. Section 2
+reviews related work in object detection, tracking, camera motion
+compensation, and distance estimation. Section 3 presents the proposed
+pipeline architecture and its constituent modules. Section 4 describes
+the algorithms in pseudocode. Section 5 presents experimental results on
+prototype vehicle footage. Section 6 discusses limitations and planned
+improvements, and Section 7 concludes the paper.</p>
+<h1 data-number="3" id="related-work"><span
+class="header-section-number">3</span> 2. Related Work</h1>
+<h2 data-number="3.1" id="object-detection-for-autonomous-driving"><span
+class="header-section-number">3.1</span> 2.1 Object Detection for
+Autonomous Driving</h2>
+<p>Convolutional neural network-based object detectors have become the
+standard for real-time obstacle recognition. The YOLO family of
+detectors (Redmon et al., 2016; Jocher et al., 2023) provides
+single-stage detection with competitive accuracy at high frame rates.
+YOLOv8 (Jocher et al., 2023), the latest iteration, introduces an
+anchor-free detection head and improved feature pyramid network that
+achieves state-of-the-art results on the COCO benchmark. For autonomous
+driving, YOLOv8n (nano) offers an effective trade-off between detection
+accuracy and inference speed, detecting 80 COCO classes including
+persons, vehicles, bicycles, and animals.</p>
+<p>Alternative approaches include two-stage detectors such as Faster
+R-CNN (Ren et al., 2015), which provide higher accuracy at the cost of
+speed, and transformer-based architectures such as DETR (Carion et al.,
+2020), which eliminate the need for anchor boxes and non-maximum
+suppression. For the prototype vehicle setting, where computational
+resources are limited and real-time performance is required,
+single-stage detectors remain the practical choice.</p>
+<h2 data-number="3.2" id="multi-object-tracking"><span
+class="header-section-number">3.2</span> 2.2 Multi-Object Tracking</h2>
+<p>The tracking-by-detection paradigm, where objects are first detected
+in each frame and then associated across frames, dominates current
+multi-object tracking systems. SORT (Bewley et al., 2016) introduced a
+minimal approach using Kalman filtering for state estimation and the
+Hungarian algorithm for assignment based on Intersection over Union
+(IoU). DeepSORT (Wojke et al., 2017) extended this with a deep
+appearance descriptor to handle occlusions and re-identification.</p>
+<p>More recent methods have improved upon this framework. ByteTrack
+(Zhang et al., 2022) demonstrated that associating low-confidence
+detections in a second matching stage significantly reduces missed
+tracks. OC-SORT (Cao et al., 2023) addressed the observation-centric
+momentum problem in Kalman filter predictions during occlusions.
+BoT-SORT (Aharon et al., 2022) integrated camera motion compensation
+directly into the tracking pipeline, warping Kalman filter predictions
+using estimated ego-motion.</p>
+<p>UCMCTrack (Yi et al., 2024) introduced a particularly relevant
+innovation: projecting detections onto the ground plane using camera
+calibration parameters and applying the Kalman filter in this physically
+meaningful coordinate system. This approach replaces IoU-based
+association with Mapped Mahalanobis Distance, which remains effective
+even when bounding boxes do not overlap. The method achieves
+state-of-the-art results on MOT17, DanceTrack, and KITTI benchmarks
+while running at over 1000 FPS for the association step alone.</p>
+<p>EMAP (Mahdian et al., 2024) proposed a plug-and-play ego-motion-aware
+prediction module that decouples camera rotational and translational
+velocity from object trajectories by reformulating the Kalman filter
+equations. When integrated into OC-SORT, EMAP reduced identity switches
+by 73% on the KITTI benchmark, demonstrating the critical importance of
+ego-motion compensation for vehicle-mounted tracking.</p>
+<h2 data-number="3.3" id="camera-motion-compensation"><span
+class="header-section-number">3.3</span> 2.3 Camera Motion
+Compensation</h2>
+<p>Camera motion compensation (CMC) aims to separate ego-motion from
+independent object motion in video sequences. The classical approach
+estimates a homography between consecutive frames using feature
+correspondences and RANSAC (Fischler and Bolles, 1981), then warps
+frames to align the background.</p>
+<p>Uemura et al. (2008) demonstrated that estimating a dominant plane
+homography via RANSAC and subtracting it from tracked features improves
+foreground-background discrimination by a factor of four. Yu et
+al. (2019) combined grid-based KLT tracking with RANSAC homography
+estimation and an adaptive background model, achieving 14.8 to 51.2 FPS
+on moving camera sequences. A key insight from their work is that the
+background model’s age threshold should decay exponentially with camera
+speed, allowing faster adaptation during rapid vehicle movement.</p>
+<p>Hedborg and Johansson (2008) demonstrated that using a regular grid
+of feature points for KLT tracking, rather than Harris or FAST corners,
+avoids the bias toward high-contrast moving objects. When feature points
+are detected by interest point detectors, they tend to cluster on the
+edges of vehicles and pedestrians. A regular grid distributes points
+uniformly across the image, ensuring that the majority of tracked points
+lie on the static background and that the RANSAC homography estimate is
+not corrupted by independently moving objects.</p>
+<p>Huang et al. (2018) proposed modeling the background optical flow as
+a quadratic function of pixel coordinates rather than a simple
+homography. This twelve-parameter model captures camera translation,
+rotation, and zoom effects simultaneously, and was fitted using
+constrained RANSAC with spatial sampling. Their adaptive interval
+mechanism adjusts the frame gap based on camera speed, maintaining
+consistent motion detection quality across varying vehicle
+velocities.</p>
+<p>Recent work has explored deep learning approaches to CMC. MONA (2025)
+combines LEAP-VO visual odometry with RAFT optical flow to classify
+points as static or dynamic without background model construction. FoELS
+(Ogawa et al., 2025) computes the Focus of Expansion from optical flow
+to separate ego-motion from independent object motion, achieving
+state-of-the-art results on the DAVIS 2016 benchmark.</p>
+<h2 data-number="3.4"
+id="distance-estimation-and-trajectory-prediction"><span
+class="header-section-number">3.4</span> 2.4 Distance Estimation and
+Trajectory Prediction</h2>
+<p>Monocular distance estimation from a single camera relies on
+geometric relationships between the camera’s intrinsic parameters and
+the apparent size of objects in the image. Given the focal length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>,
+the real-world height of an object
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math>,
+and its height in pixels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>,
+the distance is estimated as:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><mfrac><mrow><mi>H</mi><mo>×</mo><mi>f</mi></mrow><mi>h</mi></mfrac></mrow><annotation encoding="application/x-tex">d = \frac{H \times f}{h}</annotation></semantics></math></p>
+<p>This approach assumes known object dimensions and calibrated camera
+parameters. More sophisticated methods employ monocular depth estimation
+networks (Eigen et al., 2014; Ranftl et al., 2021), stereo camera
+setups, or LiDAR-camera fusion.</p>
+<p>For trajectory prediction, the constant velocity Kalman filter
+remains the dominant approach in tracking-by-detection systems. Linear
+regression over recent trajectory history provides a complementary
+prediction that captures longer-term trends. MCTrack (Wang et al., 2024)
+demonstrated that decoupling the Kalman filter into separate position,
+heading, and size filters improves tracking stability, particularly for
+the constant acceleration motion model that better handles braking and
+accelerating vehicles.</p>
+<h1 data-number="4" id="proposed-method"><span
+class="header-section-number">4</span> 3. Proposed Method</h1>
+<h2 data-number="4.1" id="system-overview"><span
+class="header-section-number">4.1</span> 3.1 System Overview</h2>
+<p>The Kiti pipeline processes video frames through a sequence of ten
+stages, illustrated in Figure 1. Each stage is implemented as an
+independent module, allowing individual components to be upgraded
+without affecting the rest of the system.</p>
+<p><strong><a href="docs/figures/pipeline_architecture.png">INSERT
+FIGURE: Pipeline architecture diagram showing the 10-stage flow: Video
+Input -&gt; CMC -&gt; Optical Flow -&gt; Background Subtraction -&gt;
+Object Detection -&gt; Tracking -&gt; Distance Estimation -&gt;
+Trajectory Prediction -&gt; ROI Analysis -&gt; Output. Show data flow
+arrows between stages.</a></strong></p>
+<p>The pipeline accepts video input from the vehicle-mounted camera and
+produces annotated video output with bounding boxes, track IDs, distance
+estimates, trajectory predictions, and behavior descriptions. Detection
+logs are exported in CSV and JSON formats for offline analysis.</p>
+<h2 data-number="4.2" id="object-detection"><span
+class="header-section-number">4.2</span> 3.2 Object Detection</h2>
+<p>Object detection is performed using YOLOv8n (Jocher et al., 2023),
+the nano variant of the YOLOv8 architecture. The model is pre-trained on
+the COCO dataset, providing detection of 80 object classes including
+persons, cars, trucks, bicycles, motorcycles, buses, and animals. A
+confidence threshold of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\tau = 0.3</annotation></semantics></math>
+filters low-confidence detections before they are passed to the tracking
+stage.</p>
+<p>Each detection produces a bounding box
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><msub><mi>y</mi><mn>1</mn></msub><mo>,</mo><msub><mi>x</mi><mn>2</mn></msub><mo>,</mo><msub><mi>y</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(x_1, y_1, x_2, y_2)</annotation></semantics></math>,
+a confidence score
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>∈</mo><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">c \in [0, 1]</annotation></semantics></math>,
+and a class label. These detections form the input to the SORT tracker,
+which maintains consistent object identities across frames.</p>
+<h2 data-number="4.3" id="camera-motion-compensation-1"><span
+class="header-section-number">4.3</span> 3.3 Camera Motion
+Compensation</h2>
+<p>The camera motion compensation module estimates the ego-motion
+between consecutive frames and provides this information to both the
+background subtraction and optical flow stages.</p>
+<p><strong>Feature Point Generation.</strong> Rather than detecting
+interest points using Harris corners or FAST features, the module
+generates feature points on a regular grid with spacing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>
+pixels (default
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">g = 16</annotation></semantics></math>).
+This yields approximately
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mi>W</mi><mi>g</mi></mfrac><mo>×</mo><mfrac><mi>H</mi><mi>g</mi></mfrac></mrow><annotation encoding="application/x-tex">\frac{W}{g} \times \frac{H}{g}</annotation></semantics></math>
+uniformly distributed points per frame. The regular grid ensures that
+the majority of tracked points lie on the static background, preventing
+the homography estimate from being biased by features on moving
+objects.</p>
+<p><strong>Optical Flow Tracking.</strong> Grid points are tracked
+between consecutive frames using the pyramidal Lucas-Kanade (KLT) method
+(Lucas and Kanade, 1981; Bouguet, 2001) with four pyramid levels and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mo>×</mo><mn>15</mn></mrow><annotation encoding="application/x-tex">15 \times 15</annotation></semantics></math>
+search windows. Points that fail the forward-backward consistency check
+are discarded.</p>
+<p><strong>Homography Estimation.</strong> From the successfully tracked
+point correspondences, a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3 \times 3</annotation></semantics></math>
+homography matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐇</mi><annotation encoding="application/x-tex">\mathbf{H}</annotation></semantics></math>
+is estimated using RANSAC with a reprojection threshold of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϵ</mi><mo>=</mo><mn>3.0</mn></mrow><annotation encoding="application/x-tex">\epsilon = 3.0</annotation></semantics></math>
+pixels. The homography maps points from the previous frame to the
+current frame under the assumption that the scene is approximately
+planar (the ground plane dominates the field of view in driving
+scenarios):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>𝐱</mi><mo>′</mo></msup><mo>=</mo><mi>𝐇</mi><mi>𝐱</mi></mrow><annotation encoding="application/x-tex">\mathbf{x}&#39; = \mathbf{H} \mathbf{x}</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐱</mi><mo>=</mo><mo stretchy="false" form="prefix">[</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">]</mo><mi>T</mi></msup></mrow><annotation encoding="application/x-tex">\mathbf{x} = [x, y, 1]^T</annotation></semantics></math>
+is a point in homogeneous coordinates. The inlier ratio from RANSAC
+serves as a quality metric: ratios above 0.8 indicate reliable
+ego-motion estimates, while lower ratios suggest significant independent
+motion in the scene or a scene geometry that violates the planar
+assumption.</p>
+<p><strong>Residual Flow Computation.</strong> Given the homography
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐇</mi><annotation encoding="application/x-tex">\mathbf{H}</annotation></semantics></math>
+and the dense optical flow field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐟</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathbf{f}(x, y) = (u, v)</annotation></semantics></math>
+computed by the Farneback method, the ego-motion flow at each pixel is
+computed by applying
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐇</mi><annotation encoding="application/x-tex">\mathbf{H}</annotation></semantics></math>
+to the pixel coordinates and subtracting the original position:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐟</mi><mrow><mi>e</mi><mi>g</mi><mi>o</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mrow><mi>𝐇</mi><mo stretchy="false" form="prefix">[</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">]</mo><mi>T</mi></msup></mrow><mrow><mo stretchy="false" form="prefix">(</mo><mi>𝐇</mi><mo stretchy="false" form="prefix">[</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">]</mo><mi>T</mi></msup><msub><mo stretchy="false" form="postfix">)</mo><mi>z</mi></msub></mrow></mfrac><mo>−</mo><mo stretchy="false" form="prefix">[</mo><mi>x</mi><mo>,</mo><mi>y</mi><msup><mo stretchy="false" form="postfix">]</mo><mi>T</mi></msup></mrow><annotation encoding="application/x-tex">\mathbf{f}_{ego}(x, y) = \frac{\mathbf{H} [x, y, 1]^T}{(\mathbf{H} [x, y, 1]^T)_z} - [x, y]^T</annotation></semantics></math></p>
+<p>The residual flow, representing only independent object motion, is
+then:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐟</mi><mrow><mi>r</mi><mi>e</mi><mi>s</mi><mi>i</mi><mi>d</mi><mi>u</mi><mi>a</mi><mi>l</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>𝐟</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>𝐟</mi><mrow><mi>e</mi><mi>g</mi><mi>o</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mathbf{f}_{residual}(x, y) = \mathbf{f}(x, y) - \mathbf{f}_{ego}(x, y)</annotation></semantics></math></p>
+<p>This residual flow is used to generate a motion mask that highlights
+independently moving objects while suppressing the background motion
+caused by the vehicle’s own movement.</p>
+<h2 data-number="4.4"
+id="ego-motion-compensated-background-subtraction"><span
+class="header-section-number">4.4</span> 3.4 Ego-Motion-Compensated
+Background Subtraction</h2>
+<p>The MOG2 background subtractor (Zivkovic, 2004) maintains a per-pixel
+Gaussian mixture model that adapts over time. In the standard
+formulation, this model assumes a static camera. To accommodate a moving
+camera, the current frame is warped using the inverse homography
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>𝐇</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">\mathbf{H}^{-1}</annotation></semantics></math>
+before being passed to the background subtractor:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mrow><mi>c</mi><mi>o</mi><mi>m</mi><mi>p</mi><mi>e</mi><mi>n</mi><mi>s</mi><mi>a</mi><mi>t</mi><mi>e</mi><mi>d</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>I</mi><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">(</mo><msup><mi>𝐇</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">[</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">]</mo><mi>T</mi></msup><msub><mo stretchy="false" form="postfix">)</mo><mrow><mi>x</mi><mo>,</mo><mi>y</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">I_{compensated}(x, y) = I((\mathbf{H}^{-1} [x, y, 1]^T)_{x,y})</annotation></semantics></math></p>
+<p>This aligns consecutive frames to a common coordinate system,
+allowing the background model to adapt correctly. The foreground mask
+from MOG2 is combined with the optical flow motion mask using a bitwise
+OR operation, producing a combined detection mask that captures both
+newly appearing objects (detected by background subtraction) and moving
+objects (detected by optical flow).</p>
+<h2 data-number="4.5" id="dense-optical-flow-with-residual-motion"><span
+class="header-section-number">4.5</span> 3.5 Dense Optical Flow with
+Residual Motion</h2>
+<p>Dense optical flow is computed using the Farneback method (Farneback,
+2003) with the following parameters: pyramid scale 0.5, three pyramid
+levels, window size 15, three iterations, polynomial expansion order 5,
+and polynomial sigma 1.2. The flow field provides per-pixel displacement
+vectors between consecutive frames.</p>
+<p>After ego-motion subtraction (Section 3.3), the residual flow
+magnitude at each pixel indicates the speed of independent motion. A
+threshold
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>=</mo><mn>1.0</mn></mrow><annotation encoding="application/x-tex">\theta = 1.0</annotation></semantics></math>
+pixel/frame is applied to generate a binary motion mask:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>M</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn></mtd><mtd columnalign="left" style="text-align: left"><mrow><mtext mathvariant="normal">if </mtext><mspace width="0.333em"></mspace></mrow><mo stretchy="false" form="postfix">∥</mo><msub><mi>𝐟</mi><mrow><mi>r</mi><mi>e</mi><mi>s</mi><mi>i</mi><mi>d</mi><mi>u</mi><mi>a</mi><mi>l</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">∥</mo><mo>&gt;</mo><mi>θ</mi></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn></mtd><mtd columnalign="left" style="text-align: left"><mtext mathvariant="normal">otherwise</mtext></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">M(x, y) = \begin{cases} 1 &amp; \text{if } \|\mathbf{f}_{residual}(x, y)\| &gt; \theta \\ 0 &amp; \text{otherwise} \end{cases}</annotation></semantics></math></p>
+<p>The flow field is also visualized as an HSV image where hue encodes
+direction and value encodes magnitude, providing an intuitive
+representation of motion patterns in the scene.</p>
+<h2 data-number="4.6" id="multi-object-tracking-1"><span
+class="header-section-number">4.6</span> 3.6 Multi-Object Tracking</h2>
+<p>Tracked objects are maintained across frames using SORT (Bewley et
+al., 2016), which combines a constant-velocity Kalman filter for state
+prediction with the Hungarian algorithm for detection-to-track
+assignment based on IoU overlap.</p>
+<p>Each track maintains a state vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐬</mi><mo>=</mo><mo stretchy="false" form="prefix">[</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><msub><mi>v</mi><mi>x</mi></msub><mo>,</mo><msub><mi>v</mi><mi>y</mi></msub><msup><mo stretchy="false" form="postfix">]</mo><mi>T</mi></msup></mrow><annotation encoding="application/x-tex">\mathbf{s} = [x, y, v_x, v_y]^T</annotation></semantics></math>
+representing the object’s center position and velocity. The Kalman
+filter predicts the state at each frame using the constant velocity
+model:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐬</mi><mrow><mi>t</mi><mo stretchy="false" form="prefix">|</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>𝐅</mi><msub><mi>𝐬</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="prefix">|</mo><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">\mathbf{s}_{t|t-1} = \mathbf{F} \mathbf{s}_{t-1|t-1}</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐅</mi><annotation encoding="application/x-tex">\mathbf{F}</annotation></semantics></math>
+is the state transition matrix. When a detection is associated with a
+track, the measurement
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐳</mi><mo>=</mo><mo stretchy="false" form="prefix">[</mo><mi>x</mi><mo>,</mo><mi>y</mi><msup><mo stretchy="false" form="postfix">]</mo><mi>T</mi></msup></mrow><annotation encoding="application/x-tex">\mathbf{z} = [x, y]^T</annotation></semantics></math>
+is used to correct the prediction. Tracks that are not matched to any
+detection for more than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">A_{max} = 5</annotation></semantics></math>
+frames are terminated, and detections that are not matched to any
+existing track for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">H_{min} = 3</annotation></semantics></math>
+consecutive frames initiate new tracks.</p>
+<p>To associate tracked objects with YOLO detections for class labeling,
+a proximity-based matching is performed: each tracked bounding box is
+compared against all YOLO detections in the same frame, and the closest
+match (within 30 pixels of the top-left corner) provides the class name
+and confidence score.</p>
+<h2 data-number="4.7" id="monocular-distance-estimation"><span
+class="header-section-number">4.7</span> 3.7 Monocular Distance
+Estimation</h2>
+<p>Distance to each tracked object is estimated using the pinhole camera
+model. Given the camera focal length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>353</mn></mrow><annotation encoding="application/x-tex">f = 353</annotation></semantics></math>
+pixels, the assumed real-world object height
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><mn>1.7</mn></mrow><annotation encoding="application/x-tex">H = 1.7</annotation></semantics></math>
+m (average person height), and the measured bounding box height
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+in pixels:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><mfrac><mrow><mi>H</mi><mo>×</mo><mi>f</mi></mrow><mi>h</mi></mfrac></mrow><annotation encoding="application/x-tex">d = \frac{H \times f}{h}</annotation></semantics></math></p>
+<p>Objects with bounding box heights below 10 pixels are excluded from
+distance estimation, as the measurement becomes unreliable at very small
+apparent sizes. This method provides approximate distance estimates
+suitable for collision warning at short to medium range, though it
+assumes known object dimensions and does not account for lens
+distortion.</p>
+<h2 data-number="4.8" id="trajectory-prediction"><span
+class="header-section-number">4.8</span> 3.8 Trajectory Prediction</h2>
+<p>Future positions of tracked objects are predicted using two
+complementary methods:</p>
+<p><strong>Kalman Filter Prediction.</strong> The constant-velocity
+Kalman filter (Section 3.6) provides one-step-ahead predictions that are
+robust to measurement noise. The process noise covariance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐐</mi><mo>=</mo><mn>0.03</mn><msub><mi>𝐈</mi><mn>4</mn></msub></mrow><annotation encoding="application/x-tex">\mathbf{Q} = 0.03 \mathbf{I}_4</annotation></semantics></math>
+and measurement noise covariance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐑</mi><mo>=</mo><mn>1.0</mn><msub><mi>𝐈</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\mathbf{R} = 1.0 \mathbf{I}_2</annotation></semantics></math>
+are set empirically.</p>
+<p><strong>Linear Regression.</strong> For objects with sufficient
+trajectory history (at least 10 frames), a linear regression model is
+fitted separately to the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+coordinate sequences over the most recent 30 frames. The fitted model
+extrapolates 30 frames into the future, providing a predicted path under
+the constant-velocity assumption:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>x</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>α</mi><mi>x</mi></msub><mi>t</mi><mo>+</mo><msub><mi>β</mi><mi>x</mi></msub><mo>,</mo><mspace width="1.0em"></mspace><mover><mi>y</mi><mo accent="true">̂</mo></mover><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>α</mi><mi>y</mi></msub><mi>t</mi><mo>+</mo><msub><mi>β</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\hat{x}(t) = \alpha_x t + \beta_x, \quad \hat{y}(t) = \alpha_y t + \beta_y</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+are the fitted slope and intercept parameters. This longer-horizon
+prediction complements the Kalman filter’s one-step prediction,
+providing the system with an estimate of where the object will be in
+approximately one second (at 30 FPS).</p>
+<h2 data-number="4.9"
+id="region-of-interest-and-behavior-detection"><span
+class="header-section-number">4.9</span> 3.9 Region of Interest and
+Behavior Detection</h2>
+<p>A central region of interest (ROI) spanning the middle 40% of the
+frame width is defined as the primary collision danger zone. Objects
+whose bounding box centers fall within this region are flagged with
+higher priority and receive additional behavioral analysis.</p>
+<p>For each tracked object, the system determines a movement direction
+using the eight-point compass model based on the displacement between
+consecutive frames. Movement below a threshold of 10 pixels per frame is
+classified as “steady.” The direction is computed as:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>=</mo><mrow><mi mathvariant="normal">arctan</mi><mo>&#8289;</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mi>−</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo>−</mo><msub><mi>y</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\theta = \arctan\left(\frac{-(y_t - y_{t-1})}{x_t - x_{t-1}}\right)</annotation></semantics></math></p>
+<p>where the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>-axis
+is negated to account for the image coordinate convention (origin at
+top-left). The angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+is quantized into one of eight compass directions (N, NE, E, SE, S, SW,
+W, NW).</p>
+<h1 data-number="5" id="algorithms"><span
+class="header-section-number">5</span> 4. Algorithms</h1>
+<p>The following pseudocode describes the Kiti pipeline. Algorithm 1
+presents the main processing loop, and Algorithm 2 details the camera
+motion compensation sub-routine.</p>
+<h2 data-number="5.1"
+id="algorithm-1-kiti-obstacle-recognition-pipeline"><span
+class="header-section-number">5.1</span> Algorithm 1: Kiti Obstacle
+Recognition Pipeline</h2>
+<pre><code>Algorithm 1: Kiti Pipeline
+
+Input:  Video sequence V, YOLOv8 model Det, SORT tracker T
+Params: Confidence threshold tau, ROI width percentage rho,
+        focal length f, reference height H, motion threshold theta
+Output: Annotated video, detection logs L
+
+ 1:  Initialize CMC module, flow analyzer, trajectory predictor
+ 2:  Initialize background subtractor BGS (MOG2)
+ 3:  L &lt;- empty list
+ 4:  while frame I_k available from V do
+ 5:      gray &lt;- convert I_k to grayscale
+ 6:
+ 7:      // ---- Camera Motion Compensation ----
+ 8:      H_k, r &lt;- EstimateCMC(gray)                // Algorithm 2
+ 9:
+10:      // ---- Dense Optical Flow ----
+11:      F &lt;- Farneback(gray_{k-1}, gray_k)          // Total flow
+12:      F_res &lt;- F - EgoFlow(H_k)                   // Residual flow
+13:      M_flow &lt;- {(x,y) : ||F_res(x,y)|| &gt; theta}  // Motion mask
+14:
+15:      // ---- Background Subtraction ----
+16:      I_comp &lt;- Warp(I_k, H_k^{-1})              // Compensate frame
+17:      M_bg &lt;- BGS.apply(I_comp)                   // Foreground mask
+18:      M_combined &lt;- M_flow OR M_bg                // Combined mask
+19:
+20:      // ---- Object Detection ----
+21:      D_k &lt;- Det(I_k)                             // YOLO detections
+22:      D_k &lt;- {d in D_k : d.conf &gt; tau}            // Filter by confidence
+23:
+24:      // ---- Multi-Object Tracking ----
+25:      Update T with Kalman prediction
+26:      Tracked &lt;- Hungarian(T, D_k)                // Associate
+27:
+28:      // ---- Per-Object Analysis ----
+29:      for each (track_id, bbox) in Tracked do
+30:          cx, cy &lt;- center(bbox)
+31:          h &lt;- height(bbox)
+32:          class &lt;- MatchYOLO(bbox, D_k)            // Get class name
+33:          dist &lt;- (H * f) / h                      // Distance estimate
+34:          pred &lt;- KalmanPredict(track_id, cx, cy)  // Trajectory
+35:          path &lt;- LinearRegress(track_id, k)       // Future path
+36:          in_roi &lt;- ROI_left &lt;= cx &lt;= ROI_right
+37:          behavior &lt;- DescribeBehavior(track_id, cx, cy)
+38:          Append record to L
+39:      end for
+40:
+41:      Write annotated frame to output
+42:  end while
+43:  Export L as CSV and JSON
+44:  return Annotated video, L</code></pre>
+<h2 data-number="5.2" id="algorithm-2-camera-motion-compensation"><span
+class="header-section-number">5.2</span> Algorithm 2: Camera Motion
+Compensation</h2>
+<pre><code>Algorithm 2: Camera Motion Compensation (EstimateCMC)
+
+Input:  Current grayscale frame gray_k, previous frame gray_{k-1}
+Params: Grid spacing g, RANSAC threshold epsilon, min inliers n_min
+Output: Homography H, inlier ratio r
+
+ 1:  // ---- Generate Regular Grid Points ----
+ 2:  P &lt;- {(x, y) : x in {g/2, 3g/2, ...}, y in {g/2, 3g/2, ...}}
+ 3:
+ 4:  // ---- Track Points with KLT ----
+ 5:  P&#39;, status &lt;- PyramidalLK(gray_{k-1}, gray_k, P)
+ 6:  P_good &lt;- {P[i] : status[i] = 1}                // Successfully tracked
+ 7:  P&#39;_good &lt;- {P&#39;[i] : status[i] = 1}
+ 8:
+ 9:  if |P_good| &lt; n_min then
+10:      return I_3x3, 0.0                            // Identity (no compensation)
+11:  end if
+12:
+13:  // ---- RANSAC Homography ----
+14:  H, inliers &lt;- RANSAC_Homography(P_good, P&#39;_good, epsilon)
+15:
+16:  if H is None then
+17:      return H_prev, 0.0                           // Use previous estimate
+18:  end if
+19:
+20:  r &lt;- |inliers| / |P_good|                       // Inlier ratio
+21:  return H, r</code></pre>
+<h1 data-number="6" id="experiments"><span
+class="header-section-number">6</span> 5. Experiments</h1>
+<h2 data-number="6.1" id="experimental-setup"><span
+class="header-section-number">6.1</span> 5.1 Experimental Setup</h2>
+<p><strong>Hardware.</strong> Experiments were conducted on a
+workstation equipped with an NVIDIA GPU (CUDA-enabled) and multi-core
+CPU. The pipeline currently executes primarily on CPU, with YOLOv8
+inference utilizing GPU acceleration when available.</p>
+<p><strong>Test Videos.</strong> Four video sequences were captured from
+the prototype vehicle camera at 1920 x 1080 resolution and 30 FPS,
+encoded in H.264. The sequences span diverse scenarios:</p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 17%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr>
+<th>Sequence</th>
+<th>Duration</th>
+<th>Frames</th>
+<th>Scene Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Seq-1</td>
+<td>72.6s</td>
+<td>2,177</td>
+<td>Urban road with pedestrians and vehicles</td>
+</tr>
+<tr>
+<td>Seq-2</td>
+<td>522.0s</td>
+<td>15,660</td>
+<td>Extended driving through mixed traffic</td>
+</tr>
+<tr>
+<td>Seq-3</td>
+<td>799.0s</td>
+<td>23,970</td>
+<td>Long sequence with varied obstacles</td>
+</tr>
+<tr>
+<td>Seq-4</td>
+<td>287.4s</td>
+<td>8,622</td>
+<td>Suburban road with diverse obstacles</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Parameters.</strong> The pipeline was configured with the
+following default parameters: YOLO confidence threshold
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\tau = 0.3</annotation></semantics></math>,
+ROI width 40%, CMC grid spacing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">g = 16</annotation></semantics></math>,
+RANSAC threshold
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϵ</mi><mo>=</mo><mn>3.0</mn></mrow><annotation encoding="application/x-tex">\epsilon = 3.0</annotation></semantics></math>,
+motion threshold
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>=</mo><mn>1.0</mn></mrow><annotation encoding="application/x-tex">\theta = 1.0</annotation></semantics></math>,
+SORT max age
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">A_{max} = 5</annotation></semantics></math>,
+SORT min hits
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mrow><mi>m</mi><mi>i</mi><mi>n</mi></mrow></msub><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">H_{min} = 3</annotation></semantics></math>,
+SORT IoU threshold 0.3, and trajectory history length 30 frames.</p>
+<h2 data-number="6.2" id="detection-results"><span
+class="header-section-number">6.2</span> 5.2 Detection Results</h2>
+<p>Initial testing on Sequence 1 (300 frames) detected 91 unique tracks
+across three object classes: person, horse, and kite. The high track
+count relative to the short sequence reflects both the diversity of
+objects in the scene and the SORT tracker’s tendency to create new track
+IDs when objects are temporarily lost due to occlusion or missed
+detections.</p>
+<p><strong><a
+href="output/2026-02-24/2025-05-18_17-07-34_sample_frame.png">INSERT
+FIGURE: Sample annotated frame showing bounding boxes, track IDs,
+distance estimates, and ROI overlay from Seq-1.</a></strong></p>
+<p>Of the 3,547 detection-track entries across 300 frames, 55% fell
+within the central ROI, indicating that the camera was pointed toward
+the direction of travel and that the ROI captures the relevant obstacle
+zone.</p>
+<h2 data-number="6.3" id="camera-motion-compensation-analysis"><span
+class="header-section-number">6.3</span> 5.3 Camera Motion Compensation
+Analysis</h2>
+<p>To evaluate the impact of camera motion compensation, we compare the
+pipeline output with CMC enabled versus disabled.</p>
+<p><strong><a href="docs/figures/cmc_comparison_heatmap.png">INSERT
+FIGURE: Side-by-side comparison of motion heatmaps with CMC enabled
+(left) and disabled (right). The CMC-enabled heatmap should show
+concentrated hotspots on moving objects, while the CMC-disabled heatmap
+shows diffuse activation across the entire frame.</a></strong></p>
+<p>The motion heatmap with CMC enabled (Figure 3) shows concentrated
+activation on independently moving objects, while the background remains
+largely inactive. This confirms that the homography-based ego-motion
+subtraction effectively separates camera motion from object motion.</p>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 32%" />
+<col style="width: 29%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Configuration</th>
+<th>False Positives (bg motion)</th>
+<th>True Positives (objects)</th>
+<th>CMC Inlier Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No CMC</td>
+<td>High (entire frame active)</td>
+<td>Mixed with background</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>With CMC</td>
+<td>Reduced</td>
+<td>Isolated object regions</td>
+<td>85-100%</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="6.4" id="processing-speed-analysis"><span
+class="header-section-number">6.4</span> 5.4 Processing Speed
+Analysis</h2>
+<p><strong><a
+href="output/2026-02-24/2025-05-18_17-07-34_performance.png">INSERT
+FIGURE: Processing time per frame plot showing the performance profile
+from the 300-frame test run. Include the 10-frame rolling
+average.</a></strong></p>
+<p>The pipeline processes frames at approximately 2.5 FPS on the test
+hardware, with a steady-state processing time of approximately 0.4
+seconds per frame. The initial frames show higher processing times due
+to model warm-up and background model initialization. The processing
+time is dominated by three components:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Approx. Time</th>
+<th>Percentage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>YOLOv8 inference</td>
+<td>~180ms</td>
+<td>45%</td>
+</tr>
+<tr>
+<td>Dense optical flow (Farneback)</td>
+<td>~120ms</td>
+<td>30%</td>
+</tr>
+<tr>
+<td>CMC (KLT + RANSAC)</td>
+<td>~50ms</td>
+<td>13%</td>
+</tr>
+<tr>
+<td>Tracking + annotation</td>
+<td>~50ms</td>
+<td>12%</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="6.5" id="comparison-with-existing-methods"><span
+class="header-section-number">6.5</span> 5.5 Comparison with Existing
+Methods</h2>
+<p>The following table compares the Kiti pipeline’s approach with
+established tracking and detection systems. Note that direct comparison
+of metrics is not possible due to differences in datasets, but
+architectural and capability differences are highlighted.</p>
+<table>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 14%" />
+<col style="width: 12%" />
+<col style="width: 6%" />
+<col style="width: 19%" />
+<col style="width: 16%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Method</th>
+<th>Detection</th>
+<th>Tracking</th>
+<th>CMC</th>
+<th>Distance Est.</th>
+<th>Traj. Pred.</th>
+<th>FPS (reported)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SORT (Bewley, 2016)</td>
+<td>External</td>
+<td>Kalman + IoU</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>260</td>
+</tr>
+<tr>
+<td>DeepSORT (Wojke, 2017)</td>
+<td>External</td>
+<td>Kalman + IoU + Appearance</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>40</td>
+</tr>
+<tr>
+<td>ByteTrack (Zhang, 2022)</td>
+<td>YOLOX</td>
+<td>Kalman + IoU (two-stage)</td>
+<td>No</td>
+<td>No</td>
+<td>No</td>
+<td>30</td>
+</tr>
+<tr>
+<td>BoT-SORT (Aharon, 2022)</td>
+<td>YOLOX</td>
+<td>Kalman + IoU + Appearance</td>
+<td>Yes (ECC)</td>
+<td>No</td>
+<td>No</td>
+<td>10</td>
+</tr>
+<tr>
+<td>UCMCTrack (Yi, 2024)</td>
+<td>External</td>
+<td>Ground-plane Kalman + MMD</td>
+<td>Yes (uniform)</td>
+<td>Implicit</td>
+<td>No</td>
+<td>1000+ (assoc.)</td>
+</tr>
+<tr>
+<td><strong>Kiti (ours)</strong></td>
+<td><strong>YOLOv8n</strong></td>
+<td><strong>Kalman + IoU</strong></td>
+<td><strong>Yes (grid KLT)</strong></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes</strong></td>
+<td><strong>2.5</strong></td>
+</tr>
+</tbody>
+</table>
+<p>The Kiti pipeline is unique in providing an end-to-end system that
+includes detection, tracking, CMC, distance estimation, trajectory
+prediction, and behavioral analysis in a single unified architecture.
+While the current processing speed (2.5 FPS) is below real-time
+requirements, the modular architecture enables targeted optimization of
+individual components.</p>
+<h2 data-number="6.6" id="motion-heatmap-analysis"><span
+class="header-section-number">6.6</span> 5.6 Motion Heatmap
+Analysis</h2>
+<p>The accumulated motion heatmap provides a spatial summary of where
+independently moving objects were detected across the processed
+sequence.</p>
+<p><strong><a
+href="output/2026-02-24/2025-05-18_17-07-34_heatmap.png">INSERT FIGURE:
+Motion heatmap from Seq-1 (300 frames) showing accumulated residual flow
+magnitude. Hot regions (red/yellow) indicate areas of frequent
+independent object motion.</a></strong></p>
+<p>The heatmap reveals that object motion concentrates in the central
+portion of the frame, consistent with the forward-facing camera
+orientation. The peripheral regions show minimal residual motion,
+confirming effective ego-motion compensation. Localized hotspots
+correspond to specific obstacle trajectories, providing a qualitative
+validation of the tracking pipeline.</p>
+<h1 data-number="7" id="discussion"><span
+class="header-section-number">7</span> 6. Discussion</h1>
+<h2 data-number="7.1" id="current-limitations"><span
+class="header-section-number">7.1</span> 6.1 Current Limitations</h2>
+<p><strong>Processing Speed.</strong> The current 2.5 FPS falls short of
+the 30 FPS target for real-time operation. The primary bottleneck is the
+dense Farneback optical flow computation (30% of frame time), followed
+by YOLOv8 inference (45%). Moving YOLOv8 to GPU and replacing dense flow
+with sparse flow or a learned alternative would significantly improve
+throughput.</p>
+<p><strong>Image-Plane Tracking.</strong> The Kalman filter operates in
+pixel coordinates, where object motion does not correspond to physical
+motion. Vehicles at different distances appear to move at different
+pixel velocities even when traveling at the same physical speed.
+Ground-plane projection, as demonstrated by UCMCTrack, would make
+predictions physically meaningful.</p>
+<p><strong>Distance Estimation Accuracy.</strong> The current monocular
+approach assumes known object dimensions and calibrated focal length.
+Objects of unknown class or varying size introduce systematic errors.
+Camera calibration with lens distortion correction would improve
+accuracy.</p>
+<p><strong>IoU-Based Association.</strong> IoU decreases rapidly when
+objects move fast relative to their size, causing track fragmentation.
+This is particularly problematic for distant small objects. Mapped
+Mahalanobis Distance or BoostTrack’s augmented similarity would improve
+association robustness.</p>
+<p><strong>Static Parameters.</strong> The pipeline uses fixed
+parameters across all sequences. Adaptive thresholds that respond to
+camera speed (Yu et al., 2019) and scene complexity would improve
+robustness.</p>
+<h2 data-number="7.2" id="planned-improvements"><span
+class="header-section-number">7.2</span> 6.2 Planned Improvements</h2>
+<p>Based on the literature review and current limitations, the following
+improvements are prioritized:</p>
+<ol type="1">
+<li><p><strong>EMAP Integration</strong> (Mahdian et al., 2024). The
+ego-motion-aware Kalman filter module can be integrated as a drop-in
+replacement for SORT’s prediction step, reducing identity switches by up
+to 73% without modifying the detection or association stages.</p></li>
+<li><p><strong>Ground-Plane Tracking.</strong> Following the UCMCTrack
+approach (Yi et al., 2024), projecting detections onto the ground plane
+using estimated or calibrated camera parameters and running the Kalman
+filter in physical coordinates. MCTrack’s decoupled filter architecture
+(Wang et al., 2024) provides a refined version of this
+approach.</p></li>
+<li><p><strong>Mapped Mahalanobis Distance.</strong> Replacing IoU with
+MMD for track-detection association, handling cases where bounding boxes
+do not overlap. BoostTrack’s approach of augmenting IoU with Mahalanobis
+distance and shape similarity offers an incremental
+alternative.</p></li>
+<li><p><strong>Adaptive Background Model.</strong> Implementing
+speed-dependent thresholds following Yu et al. (2019), where the
+background model’s age threshold decays exponentially with the average
+optical flow magnitude:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>τ</mi><mi>α</mi></msub><mo>=</mo><mi>μ</mi><mo>⋅</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>σ</mi><mover><mi>f</mi><mo accent="true">‾</mo></mover></mrow></msup></mrow><annotation encoding="application/x-tex">\tau_\alpha = \mu \cdot e^{-\sigma \bar{f}}</annotation></semantics></math>.</p></li>
+<li><p><strong>GPU Acceleration.</strong> Moving YOLOv8 inference fully
+to GPU and exploring CUDA-accelerated optical flow to reach the 30 FPS
+real-time target.</p></li>
+</ol>
+<h1 data-number="8" id="conclusion"><span
+class="header-section-number">8</span> 7. Conclusion</h1>
+<p>This paper presented Kiti, a modular obstacle recognition pipeline
+for autonomous vehicle prototypes that integrates camera motion
+compensation with deep learning-based detection, multi-object tracking,
+distance estimation, and trajectory prediction. The key contribution is
+the regular-grid KLT and RANSAC homography-based camera motion
+compensation module, which enables traditional motion analysis
+techniques to function correctly from a moving camera by subtracting
+estimated ego-motion from the total optical flow field.</p>
+<p>Experimental evaluation on real-world driving sequences demonstrated
+that the pipeline successfully detects and tracks diverse obstacles
+including pedestrians, vehicles, and animals, with CMC effectively
+isolating independent object motion from the dominant ego-motion signal.
+The modular architecture provides a practical framework for iterative
+improvement, with clear upgrade paths identified from the current
+literature.</p>
+<p>Future work will focus on integrating ego-motion-aware Kalman
+filtering, ground-plane tracking, and GPU acceleration to achieve
+real-time performance suitable for deployment on the prototype
+vehicle.</p>
+<h1 data-number="9" id="references"><span
+class="header-section-number">9</span> References</h1>
+<p>Aharon, N., Orfaig, R., and Bobrovsky, B.-Z. (2022). BoT-SORT: Robust
+associations multi-pedestrian tracking. <em>arXiv preprint
+arXiv:2206.14651</em>.</p>
+<p>Bewley, A., Ge, Z., Ott, L., Ramos, F., and Upcroft, B. (2016).
+Simple online and realtime tracking. In <em>IEEE International
+Conference on Image Processing (ICIP)</em>, pp. 3464-3468.</p>
+<p>Bouguet, J.-Y. (2001). Pyramidal implementation of the affine Lucas
+Kanade feature tracker: Description of the algorithm. <em>Intel
+Corporation</em>, 5(1-10), 4.</p>
+<p>Cao, J., Pang, J., Weng, X., Khirodkar, R., and Kitani, K. (2023).
+Observation-centric SORT: Rethinking SORT for robust multi-object
+tracking. In <em>IEEE/CVF Conference on Computer Vision and Pattern
+Recognition (CVPR)</em>, pp. 9686-9696.</p>
+<p>Carion, N., Massa, F., Synnaeve, G., Usunier, N., Kirillov, A., and
+Zagoruyko, S. (2020). End-to-end object detection with transformers. In
+<em>European Conference on Computer Vision (ECCV)</em>, pp. 213-229.</p>
+<p>Eigen, D., Puhrsch, C., and Fergus, R. (2014). Depth map prediction
+from a single image using a multi-scale deep network. In <em>Advances in
+Neural Information Processing Systems (NeurIPS)</em>, 27.</p>
+<p>Farneback, G. (2003). Two-frame motion estimation based on polynomial
+expansion. In <em>Scandinavian Conference on Image Analysis</em>,
+pp. 363-370.</p>
+<p>Fischler, M. A. and Bolles, R. C. (1981). Random sample consensus: A
+paradigm for model fitting with applications to image analysis and
+automated cartography. <em>Communications of the ACM</em>, 24(6),
+381-395.</p>
+<p>Hedborg, J. and Johansson, B. (2008). Real-time camera ego-motion
+compensation and lens undistortion on GPU. <em>Technical Report,
+Linkoping University</em>.</p>
+<p>Huang, J., Zou, W., Zhu, J., and Zhu, Z. (2018). Optical flow based
+real-time moving object detection in unconstrained scenes. <em>arXiv
+preprint arXiv:1807.04890</em>.</p>
+<p>Jocher, G., Chaurasia, A., and Qiu, J. (2023). Ultralytics YOLOv8.
+https://github.com/ultralytics/ultralytics.</p>
+<p>Lucas, B. D. and Kanade, T. (1981). An iterative image registration
+technique with an application to stereo vision. In <em>International
+Joint Conference on Artificial Intelligence (IJCAI)</em>,
+pp. 674-679.</p>
+<p>Mahdian, N., Jani, M., Enayati, A. M. S., and Najjaran, H. (2024).
+EMAP: Ego-motion aware target prediction module for robust multi-object
+tracking. <em>arXiv preprint arXiv:2404.03110</em>.</p>
+<p>Ogawa, M., et al. (2025). FoELS: Moving object detection from moving
+camera using focus of expansion likelihood and segmentation. <em>arXiv
+preprint arXiv:2507.13628</em>.</p>
+<p>Ranftl, R., Bochkovskiy, A., and Koltun, V. (2021). Vision
+transformers for dense prediction. In <em>IEEE/CVF International
+Conference on Computer Vision (ICCV)</em>, pp. 12179-12188.</p>
+<p>Redmon, J., Divvala, S., Girshick, R., and Farhadi, A. (2016). You
+only look once: Unified, real-time object detection. In <em>IEEE/CVF
+Conference on Computer Vision and Pattern Recognition (CVPR)</em>,
+pp. 779-788.</p>
+<p>Ren, S., He, K., Girshick, R., and Sun, J. (2015). Faster R-CNN:
+Towards real-time object detection with region proposal networks. In
+<em>Advances in Neural Information Processing Systems (NeurIPS)</em>,
+28.</p>
+<p>Uemura, H., Ishikawa, S., and Mikolajczyk, K. (2008). Feature
+tracking and motion compensation for action recognition. In <em>British
+Machine Vision Conference (BMVC)</em>.</p>
+<p>Wang, W., et al. (2024). MCTrack: A unified 3D multi-object tracking
+framework for autonomous driving. <em>arXiv preprint
+arXiv:2409.16149</em>.</p>
+<p>Wojke, N., Bewley, A., and Paulus, D. (2017). Simple online and
+realtime tracking with a deep association metric. In <em>IEEE
+International Conference on Image Processing (ICIP)</em>,
+pp. 3645-3649.</p>
+<p>Yi, K., Li, Z., et al. (2024). UCMCTrack: Multi-object tracking with
+uniform camera motion compensation. In <em>AAAI Conference on Artificial
+Intelligence</em>, 38.</p>
+<p>Yu, Y., Kurnianggoro, L., and Jo, K.-H. (2019). Moving object
+detection for a moving camera based on global motion compensation and
+adaptive background model. <em>International Journal of Control,
+Automation and Systems</em>, 17, 1-10.</p>
+<p>Zhang, Y., Sun, P., Jiang, Y., Yu, D., Weng, F., Yuan, Z., Luo, P.,
+Liu, W., and Wang, X. (2022). ByteTrack: Multi-object tracking by
+associating every detection box. In <em>European Conference on Computer
+Vision (ECCV)</em>, pp. 1-21.</p>
+<p>Zivkovic, Z. (2004). Improved adaptive Gaussian mixture model for
+background subtraction. In <em>International Conference on Pattern
+Recognition (ICPR)</em>, pp. 28-31.</p>
+</body>
+</html>

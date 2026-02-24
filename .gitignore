@@ -1,2 +1,8 @@
 videos/
 *.pdf
+output/
+models/
+docs/*.docx
+docs/*.pdf
+__pycache__/
+*.pyc

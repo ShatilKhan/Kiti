@@ -124,6 +124,75 @@ Use gh CLI instead of github mcp
 
 ---
 
+## 2026-02-24
+
+### Work Done
+
+**1. Architecture Analysis & Pipeline Unification**
+- Analyzed both notebooks (`Area_Marking.ipynb`, `Kiti_Optical_flow.ipynb`) to identify overlapping code and complementary features
+- Created unified pipeline: `kiti_pipeline.py` — single modular Python script combining all functionality
+- Adapted from Google Colab to local execution with `videos/` directory
+- Pipeline runs standalone via CLI with flexible arguments
+
+**2. Unified Pipeline Capabilities (kiti_pipeline.py)**
+- **Camera Motion Compensation**: Regular grid KLT tracking + RANSAC homography estimation + residual flow computation
+- **Dense Optical Flow**: Farneback with ego-motion subtraction
+- **Background Subtraction**: MOG2 on homography-compensated frames
+- **Object Detection**: YOLOv8n
+- **Object Tracking**: SORT with Kalman filter
+- **Distance Estimation**: Focal-length based monocular depth
+- **Trajectory Prediction**: Kalman filter + linear regression future path
+- **8-Direction Movement Analysis**: Compass-based direction detection
+- **ROI Marking**: Central 40% region with behavior detection
+- **Annotation & Logging**: Full overlay + CSV/JSON export + heatmap + performance plots
+
+**3. Literature Search — Latest Papers (2023-2026)**
+Identified 15+ new papers relevant to the pipeline improvements:
+
+| Paper | Key Contribution | Impact |
+|-------|-----------------|--------|
+| **EMAP** (arXiv 2404.03110) | Plug-and-play ego-motion-aware KF for SORT — 73% fewer ID switches | Highest priority |
+| **MCTrack** (IROS 2025) | Decoupled KF on BEV plane, SOTA on KITTI/nuScenes/Waymo | Ground-plane tracking |
+| **FoELS** (arXiv 2507.13628) | Focus of Expansion for ego-motion separation, works with Farneback | Lightweight CMC alternative |
+| **BoostTrack** (MVA 2024) | Augments IoU with Mahalanobis + shape similarity | Incremental IoU improvement |
+| **MONA** (arXiv 2501.13183) | YOLO + SAM + RAFT for dynamic point extraction | Modern MOG2 replacement |
+| **BEVTrack** (IJCAI 2025) | Ground-plane tracking at 200 FPS | Fast BEV tracking |
+| **Homography+YOLOv8** (IEEE 2024) | IPT + background subtraction, 92-99% accuracy | Validates our approach |
+
+**4. Testing**
+- Tested on `2025-05-18 17-03-38.mkv`: 30 frames, 6 tracks (car, person), 98% ROI coverage
+- Tested on `2025-05-18 17-07-34.mp4`: 300 frames, 91 tracks (person, horse, kite), 55% ROI coverage
+- Steady ~2.5 fps at 1920x1080 (CPU-bound, CUDA available for GPU acceleration)
+
+### Decisions Made
+
+1. **Unified pipeline as Python script** (not notebook) — better for version control, modularity, and CLI usage. Original Colab notebooks preserved as reference.
+2. **CMC approach**: Started with homography-based (grid KLT + RANSAC) — the simplest effective approach from the literature. This answers the previous blocker question.
+3. **Research-informed priority update** based on new literature:
+   - **Immediate**: Integrate EMAP ego-motion-aware KF into SORT (plug-and-play, highest ROI)
+   - **Short-term**: Move to ground-plane tracking (MCTrack/UCMCTrack approach)
+   - **Medium-term**: Replace MOG2 with residual flow model (FoELS approach)
+
+### GitHub Project Updates
+- Item 3 (Combine Area Marking + Optical Flow Pipeline): **DONE** — `kiti_pipeline.py`
+- Item 4 (Implement Camera Motion Compensation): **DONE** — CameraMotionCompensator class with grid KLT + RANSAC
+- Items 1 & 2 (Research): Already complete from previous session, now updated with 15+ new papers
+
+### Next Steps
+1. **EMAP Integration**: Implement ego-motion-aware Kalman filter from EMAP paper as drop-in replacement for SORT's prediction module
+2. **Ground-Plane Tracking**: Implement UCMCTrack-style ground-plane projection with camera parameter estimation
+3. **Mapped Mahalanobis Distance**: Replace IoU association with MMD from UCMCTrack
+4. **GPU Acceleration**: Move YOLO inference to GPU, profile bottlenecks for real-time target
+5. **Full Video Processing**: Run pipeline on all 4 test videos, evaluate detection quality
+6. **Adaptive Background**: Implement speed-dependent threshold from Yu et al. (IJCAS 2019)
+
+### Blockers/Questions
+- Camera intrinsic parameters still unknown — may need calibration step or use UCMCTrack's auto-estimation tool
+- Current fps (~2.5) is CPU-bound. Need to profile: is the bottleneck YOLO, optical flow, or CMC?
+- Should we prioritize EMAP integration (tracking improvement) or GPU acceleration (speed improvement) first?
+
+---
+
 ## Template for Future Entries
 
 ```markdown
