@@ -193,6 +193,85 @@ Identified 15+ new papers relevant to the pipeline improvements:
 
 ---
 
+## 2026-02-24 (Session 2 — Paper & Documentation)
+
+### Work Done
+
+**1. Research Paper Draft (`docs/paper.md`)**
+- Wrote full structured research paper (422 lines, 38KB):
+  - Abstract, Introduction (3 contributions)
+  - Related Work: 4 subsections (Detection, Tracking, CMC, Distance/Trajectory)
+  - Proposed Method: 9 subsections (System Overview through ROI/Behavior)
+  - 2 pseudocode algorithms in ByteTrack/UCMCTrack convention
+  - Experiments: 6 subsections with tables
+  - Comparison table: SORT vs DeepSORT vs ByteTrack vs BoT-SORT vs UCMCTrack vs Kiti
+  - Discussion: Current Limitations + Planned Improvements
+  - Conclusion + 24 references
+
+**2. Formatted Word Document (`docs/paper.docx`)**
+- Created `docs/generate_paper_docx.js` — reusable Node.js docx-js script (59KB)
+- Formatting: Times New Roman 12pt, US Letter, 1" margins, numbered sections
+- Title page: Title (18pt bold), author "Shatil Khan", date "February 2026"
+- Header/footer: Paper title (right, italic) + page numbers (centered)
+- Pseudocode blocks: Courier New 9pt with horizontal rule borders
+- Tables: Black borders, blue header shading, cell padding
+- Figure placeholders: Dashed gray border, italic description text
+- References: Hanging indent, italic venue names
+- Validated with anthropics-docx schema validator (all checks passed)
+- Fixed known docx-js border ordering issue (top/left/bottom/right schema order)
+
+**3. Additional Conversions**
+- `docs/paper.pdf` (83KB) via weasyprint (math rendering approximate)
+- `docs/paper.html` (69KB) intermediate format
+
+**4. Pipeline Architecture Diagram (Figure 1)**
+- Created `docs/figures/generate_pipeline_diagram.py` — reusable Python/matplotlib script
+- Generated `docs/figures/pipeline_architecture.png` (350KB, 300dpi) — publication-quality 10-stage flow diagram
+- Generated `docs/figures/pipeline_architecture.pdf` (45KB) — vector version
+- Also created `docs/figures/pipeline_architecture.tex` — LaTeX/TikZ source (needs texlive-pictures to compile, kept for future use)
+- Diagram features: two-column layout, numbered color-coded stages, subtitles with method details, data flow arrows, dashed red H matrix shared parameter line, legend
+- LaTeX compilation not available (only texlive-base installed, missing texlive-pictures for TikZ), so used matplotlib instead
+
+**5. Documentation & Memory**
+- Created `memory/docx_workflow.md` with full regeneration instructions
+- Updated project memory with file structure, docx workflow, daily update process
+- All scripts kept in codebase for daily reuse:
+  - `docs/generate_paper_docx.js` — regenerate Word document
+  - `docs/figures/generate_pipeline_diagram.py` — regenerate pipeline diagram
+
+### Decisions Made
+1. **Reusable generator scripts** — all kept in repo for daily reuse
+2. **Regeneration commands**:
+   - DOCX: `NODE_PATH=$(npm root -g) node docs/generate_paper_docx.js`
+   - Pipeline diagram: `python3 docs/figures/generate_pipeline_diagram.py`
+3. **Daily workflow**: Edit paper.md + update generator → regenerate docx → share
+4. **Figure placeholders** left as tagged text for manual image insertion
+5. **Matplotlib over LaTeX** for diagram generation — texlive-pictures not installed, matplotlib available everywhere
+
+### Image Placeholders in paper.docx
+
+| # | Placeholder Description | Target Path | Status |
+|---|------------------------|-------------|--------|
+| 1 | Pipeline architecture diagram (10-stage flow) | `docs/figures/pipeline_architecture.png` | **CREATED** (350KB, 300dpi) |
+| 2 | Sample annotated frame (bboxes, IDs, distances, ROI) | Extract frame from `output/2026-02-24/2025-05-18 17-07-34_annotated.mp4` | **NEEDS EXTRACTION** (use ffmpeg) |
+| 3 | CMC comparison heatmap (with vs without CMC) | `docs/figures/cmc_comparison_heatmap.png` | **NEEDS CREATION** (run pipeline with --no-cmc, compare) |
+| 4 | Processing time per frame plot | `output/2026-02-24/2025-05-18 17-07-34_performance.png` | **EXISTS** — ready to paste |
+| 5 | Motion heatmap from Seq-1 | `output/2026-02-24/2025-05-18 17-07-34_heatmap.png` | **EXISTS** — ready to paste |
+
+### Next Steps
+1. ~~Generate pipeline flow diagram~~ — **DONE** (`docs/figures/pipeline_architecture.png`)
+2. **Extract sample annotated frame** from output video for Figure 2 (use ffmpeg)
+3. **Generate CMC comparison** (run pipeline with/without --no-cmc) for Figure 3
+4. **Paste existing images** into docx: performance.png (Fig 4), heatmap.png (Fig 5)
+5. Begin EMAP integration into tracking module
+6. Run pipeline on all 4 test videos for full results section
+
+### Blockers/Questions
+- CMC comparison requires two pipeline runs (with and without --no-cmc flag)
+- texlive-pictures not installed — used matplotlib for diagrams instead of TikZ
+
+---
+
 ## Template for Future Entries
 
 ```markdown
