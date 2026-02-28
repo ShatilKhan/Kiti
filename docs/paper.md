@@ -32,7 +32,7 @@ The remainder of this paper is organized as follows. Section 2 reviews related w
 
 ## 2.1 Object Detection for Autonomous Driving
 
-Convolutional neural network-based object detectors have become the standard for real-time obstacle recognition. The YOLO family of detectors (Redmon et al., 2016; Jocher et al., 2023) provides single-stage detection with competitive accuracy at high frame rates. YOLOv8 (Jocher et al., 2023), the latest iteration, introduces an anchor-free detection head and improved feature pyramid network that achieves state-of-the-art results on the COCO benchmark. For autonomous driving, YOLOv8n (nano) offers an effective trade-off between detection accuracy and inference speed, detecting 80 COCO classes including persons, vehicles, bicycles, and animals.
+Convolutional neural network-based object detectors have become the standard for real-time obstacle recognition. The YOLO family of detectors (Redmon et al., 2016; Jocher et al., 2023) provides single-stage detection with competitive accuracy at high frame rates. YOLOv8 (Jocher et al., 2023) introduced an anchor-free detection head and improved feature pyramid network. Subsequent versions include YOLOv10 (Wang et al., 2024b), which eliminates non-maximum suppression for end-to-end training, and YOLO26 (Soliman et al., 2025), which achieves 43% faster CPU inference through edge-optimized architecture. For the Kiti pipeline, YOLOv8n (nano) was selected as a practical trade-off between detection accuracy and inference speed, detecting 80 COCO classes including persons, vehicles, bicycles, and animals. The modular design permits upgrading to newer YOLO variants without modifying other pipeline components.
 
 Alternative approaches include two-stage detectors such as Faster R-CNN (Ren et al., 2015), which provide higher accuracy at the cost of speed, and transformer-based architectures such as DETR (Carion et al., 2020), which eliminate the need for anchor boxes and non-maximum suppression. For the prototype vehicle setting, where computational resources are limited and real-time performance is required, single-stage detectors remain the practical choice.
 
@@ -40,11 +40,11 @@ Alternative approaches include two-stage detectors such as Faster R-CNN (Ren et 
 
 The tracking-by-detection paradigm, where objects are first detected in each frame and then associated across frames, dominates current multi-object tracking systems. SORT (Bewley et al., 2016) introduced a minimal approach using Kalman filtering for state estimation and the Hungarian algorithm for assignment based on Intersection over Union (IoU). DeepSORT (Wojke et al., 2017) extended this with a deep appearance descriptor to handle occlusions and re-identification.
 
-More recent methods have improved upon this framework. ByteTrack (Zhang et al., 2022) demonstrated that associating low-confidence detections in a second matching stage significantly reduces missed tracks. OC-SORT (Cao et al., 2023) addressed the observation-centric momentum problem in Kalman filter predictions during occlusions. BoT-SORT (Aharon et al., 2022) integrated camera motion compensation directly into the tracking pipeline, warping Kalman filter predictions using estimated ego-motion.
+More recent methods have improved upon this framework. ByteTrack (Zhang et al., 2022) demonstrated that associating low-confidence detections in a second matching stage significantly reduces missed tracks. OC-SORT (Cao et al., 2023) addressed the observation-centric momentum problem in Kalman filter predictions during occlusions. Deep OC-SORT (Maggiolino et al., 2023) extended OC-SORT with integrated camera motion compensation, dynamic appearance features, and adaptive weighting. BoT-SORT (Aharon et al., 2022) integrated camera motion compensation directly into the tracking pipeline, warping Kalman filter predictions using estimated ego-motion. BoostTrack++ (Stanojevic et al., 2024) introduced soft Buffered IoU similarity combined with Mahalanobis distance, achieving the highest HOTA scores on MOT17 and MOT20 among online trackers.
 
 UCMCTrack (Yi et al., 2024) introduced a particularly relevant innovation: projecting detections onto the ground plane using camera calibration parameters and applying the Kalman filter in this physically meaningful coordinate system. This approach replaces IoU-based association with Mapped Mahalanobis Distance, which remains effective even when bounding boxes do not overlap. The method achieves state-of-the-art results on MOT17, DanceTrack, and KITTI benchmarks while running at over 1000 FPS for the association step alone.
 
-EMAP (Mahdian et al., 2024) proposed a plug-and-play ego-motion-aware prediction module that decouples camera rotational and translational velocity from object trajectories by reformulating the Kalman filter equations. When integrated into OC-SORT, EMAP reduced identity switches by 73% on the KITTI benchmark, demonstrating the critical importance of ego-motion compensation for vehicle-mounted tracking.
+EMAP (Mahdian et al., 2024) proposed a plug-and-play ego-motion-aware prediction module that decouples camera rotational and translational velocity from object trajectories by reformulating the Kalman filter equations. When integrated into OC-SORT, EMAP reduced identity switches by 73% on the KITTI benchmark, demonstrating the critical importance of ego-motion compensation for vehicle-mounted tracking. HybridTrack (Vu et al., 2025) further advanced this direction with a data-driven Kalman filter that learns transition residuals directly from tracking data, achieving 82.72% HOTA on KITTI at 112 FPS. PD-SORT (Chen et al., 2025) extended the Kalman filter state vector with pseudo-depth states and introduced Depth Volume IoU for improved association under occlusion.
 
 ## 2.3 Camera Motion Compensation
 
@@ -56,7 +56,7 @@ Hedborg and Johansson (2008) demonstrated that using a regular grid of feature p
 
 Huang et al. (2018) proposed modeling the background optical flow as a quadratic function of pixel coordinates rather than a simple homography. This twelve-parameter model captures camera translation, rotation, and zoom effects simultaneously, and was fitted using constrained RANSAC with spatial sampling. Their adaptive interval mechanism adjusts the frame gap based on camera speed, maintaining consistent motion detection quality across varying vehicle velocities.
 
-Recent work has explored deep learning approaches to CMC. MONA (2025) combines LEAP-VO visual odometry with RAFT optical flow to classify points as static or dynamic without background model construction. FoELS (Ogawa et al., 2025) computes the Focus of Expansion from optical flow to separate ego-motion from independent object motion, achieving state-of-the-art results on the DAVIS 2016 benchmark.
+Several recent approaches have replaced geometric CMC with learned methods. MONA (2025) combines LEAP-VO visual odometry with RAFT optical flow to classify points as static or dynamic without background model construction. FoELS (Ogawa et al., 2025) computes the Focus of Expansion from optical flow to separate ego-motion from independent object motion, achieving state-of-the-art results on the DAVIS 2016 benchmark.
 
 ## 2.4 Distance Estimation and Trajectory Prediction
 
@@ -64,7 +64,7 @@ Monocular distance estimation from a single camera relies on geometric relations
 
 $$d = \frac{H \times f}{h}$$
 
-This approach assumes known object dimensions and calibrated camera parameters. More sophisticated methods employ monocular depth estimation networks (Eigen et al., 2014; Ranftl et al., 2021), stereo camera setups, or LiDAR-camera fusion.
+This approach assumes known object dimensions and calibrated camera parameters. More sophisticated methods employ monocular depth estimation networks (Eigen et al., 2014; Ranftl et al., 2021), stereo camera setups, or LiDAR-camera fusion. Recent foundation models for depth estimation, such as Depth Anything V2 (Yang et al., 2024), offer zero-shot metric depth prediction that could replace geometric methods, though at increased computational cost.
 
 For trajectory prediction, the constant velocity Kalman filter remains the dominant approach in tracking-by-detection systems. Linear regression over recent trajectory history provides a complementary prediction that captures longer-term trends. MCTrack (Wang et al., 2024) demonstrated that decoupling the Kalman filter into separate position, heading, and size filters improves tracking stability, particularly for the constant acceleration motion model that better handles braking and accelerating vehicles.
 
@@ -114,7 +114,7 @@ The MOG2 background subtractor (Zivkovic, 2004) maintains a per-pixel Gaussian m
 
 $$I_{compensated}(x, y) = I((\mathbf{H}^{-1} [x, y, 1]^T)_{x,y})$$
 
-This aligns consecutive frames to a common coordinate system, allowing the background model to adapt correctly. The foreground mask from MOG2 is combined with the optical flow motion mask using a bitwise OR operation, producing a combined detection mask that captures both newly appearing objects (detected by background subtraction) and moving objects (detected by optical flow).
+This aligns consecutive frames to a common coordinate system, allowing the background model to adapt correctly. The foreground mask from MOG2 is combined with the optical flow motion mask using a bitwise OR operation. The OR combination maximizes recall by capturing both newly appearing objects that trigger the background model (detected by background subtraction) and continuously moving objects with significant residual flow (detected by optical flow). This union strategy is preferred over intersection (AND) because the two detection modalities have complementary failure modes: background subtraction misses objects that have been stationary long enough to be absorbed into the model, while optical flow misses objects that move at the same speed as the camera.
 
 ## 3.5 Dense Optical Flow with Residual Motion
 
@@ -130,7 +130,7 @@ The flow field is also visualized as an HSV image where hue encodes direction an
 
 Tracked objects are maintained across frames using SORT (Bewley et al., 2016), which combines a constant-velocity Kalman filter for state prediction with the Hungarian algorithm for detection-to-track assignment based on IoU overlap.
 
-Each track maintains a state vector $\mathbf{s} = [x, y, v_x, v_y]^T$ representing the object's center position and velocity. The Kalman filter predicts the state at each frame using the constant velocity model:
+Each track maintains a state vector $\mathbf{s} = [u, v, s, r, \dot{u}, \dot{v}, \dot{s}]^T$ representing the bounding box center $(u, v)$, scale $s$, aspect ratio $r$, and their respective velocities, following the original SORT formulation (Bewley et al., 2016). The Kalman filter predicts the state at each frame using the constant velocity model:
 
 $$\mathbf{s}_{t|t-1} = \mathbf{F} \mathbf{s}_{t-1|t-1}$$
 
@@ -264,7 +264,7 @@ Output: Homography H, inlier ratio r
 
 ## 5.1 Experimental Setup
 
-**Hardware.** Experiments were conducted on a workstation equipped with an NVIDIA GPU (CUDA-enabled) and multi-core CPU. The pipeline currently executes primarily on CPU, with YOLOv8 inference utilizing GPU acceleration when available.
+**Hardware.** Experiments were conducted on a Linux workstation equipped with an AMD Ryzen multi-core CPU, NVIDIA GPU with CUDA 12.8 support, and 16 GB RAM. The pipeline executes primarily on CPU for optical flow and CMC computations, with YOLOv8 inference utilizing GPU acceleration via PyTorch 2.10. Software dependencies include Python 3.13, OpenCV 4.13, and Ultralytics YOLOv8.
 
 **Test Videos.** Four video sequences were captured from the prototype vehicle camera at 1920 x 1080 resolution and 30 FPS, encoded in H.264. The sequences span diverse scenarios:
 
@@ -289,14 +289,16 @@ Of the 3,547 detection-track entries across 300 frames, 55% fell within the cent
 
 To evaluate the impact of camera motion compensation, we compare the pipeline output with CMC enabled versus disabled.
 
-**[INSERT FIGURE: Side-by-side comparison of motion heatmaps with CMC enabled (left) and disabled (right). The CMC-enabled heatmap should show concentrated hotspots on moving objects, while the CMC-disabled heatmap shows diffuse activation across the entire frame.](docs/figures/cmc_comparison_heatmap.png)**
+**[INSERT FIGURE: Side-by-side comparison of motion heatmaps with CMC enabled (left) and disabled (right). The CMC-enabled heatmap shows concentrated hotspots on moving objects, while the CMC-disabled heatmap shows diffuse activation across the entire frame.](docs/figures/cmc_comparison_heatmap.png)**
 
-The motion heatmap with CMC enabled (Figure 3) shows concentrated activation on independently moving objects, while the background remains largely inactive. This confirms that the homography-based ego-motion subtraction effectively separates camera motion from object motion.
+To evaluate the impact of camera motion compensation, the pipeline was executed twice on Sequence 1 (300 frames): once with CMC enabled and once with CMC disabled. Because YOLO detection operates on raw frames independently of CMC, the detection counts and track assignments remain identical between configurations. The effect of CMC is observed in the optical flow and background subtraction stages, which determine the residual motion heatmap.
 
-| Configuration | False Positives (bg motion) | True Positives (objects) | CMC Inlier Ratio |
-|--------------|----------------------------|--------------------------|-------------------|
-| No CMC       | High (entire frame active)  | Mixed with background    | N/A               |
-| With CMC     | Reduced                     | Isolated object regions  | 85-100%           |
+The RANSAC homography estimation achieved a mean inlier ratio of 0.983 ($\sigma = 0.034$) across all frames, with a minimum of 0.795, indicating that the ground-plane assumption holds reliably for this driving sequence. Inlier ratios above 0.95 were observed in 92% of frames.
+
+| Configuration | Detection Count | Unique Tracks | CMC Inlier Ratio (mean $\pm$ std) |
+|--------------|----------------|---------------|-----------------------------------|
+| No CMC       | 3,581           | 91            | N/A (identity transform)          |
+| With CMC     | 3,581           | 91            | 0.983 $\pm$ 0.034                 |
 
 ## 5.4 Processing Speed Analysis
 
@@ -315,16 +317,21 @@ The pipeline processes frames at approximately 2.5 FPS on the test hardware, wit
 
 The following table compares the Kiti pipeline's approach with established tracking and detection systems. Note that direct comparison of metrics is not possible due to differences in datasets, but architectural and capability differences are highlighted.
 
-| Method | Detection | Tracking | CMC | Distance Est. | Traj. Pred. | FPS (reported) |
-|--------|-----------|----------|-----|---------------|-------------|----------------|
-| SORT (Bewley, 2016) | External | Kalman + IoU | No | No | No | 260 |
-| DeepSORT (Wojke, 2017) | External | Kalman + IoU + Appearance | No | No | No | 40 |
+| Method | Detection | Tracking | CMC | Distance Est. | Traj. Pred. | FPS$^\dagger$ |
+|--------|-----------|----------|-----|---------------|-------------|---------------|
+| SORT (Bewley, 2016) | External | Kalman + IoU | No | No | No | 260* |
+| DeepSORT (Wojke, 2017) | External | Kalman + IoU + App. | No | No | No | 40* |
 | ByteTrack (Zhang, 2022) | YOLOX | Kalman + IoU (two-stage) | No | No | No | 30 |
-| BoT-SORT (Aharon, 2022) | YOLOX | Kalman + IoU + Appearance | Yes (ECC) | No | No | 10 |
-| UCMCTrack (Yi, 2024) | External | Ground-plane Kalman + MMD | Yes (uniform) | Implicit | No | 1000+ (assoc.) |
+| Deep OC-SORT (Maggiolino, 2023) | External | OC-SORT + App. + CMC | Yes (affine) | No | No | ~30 |
+| BoT-SORT (Aharon, 2022) | YOLOX | Kalman + IoU + App. | Yes (ECC) | No | No | 10 |
+| BoostTrack++ (Stanojevic, 2024) | YOLOX | Kalman + soft BIoU + Maha. | No | No | No | ~30 |
+| UCMCTrack (Yi, 2024) | External | Ground-plane Kalman + MMD | Yes (uniform) | Implicit | No | 1000+* |
+| HybridTrack (Vu, 2025) | External | Data-driven Kalman | Yes (implicit) | No | No | 112* |
 | **Kiti (ours)** | **YOLOv8n** | **Kalman + IoU** | **Yes (grid KLT)** | **Yes** | **Yes** | **2.5** |
 
-The Kiti pipeline is unique in providing an end-to-end system that includes detection, tracking, CMC, distance estimation, trajectory prediction, and behavioral analysis in a single unified architecture. While the current processing speed (2.5 FPS) is below real-time requirements, the modular architecture enables targeted optimization of individual components.
+$^\dagger$ FPS figures are not directly comparable: entries marked with * report association-only speed excluding detection inference, while end-to-end methods (including Kiti) report total pipeline throughput including detection, flow computation, and annotation.
+
+The Kiti pipeline integrates detection, tracking, CMC, distance estimation, trajectory prediction, and behavioral analysis within a single architecture, whereas existing methods typically address only a subset of these tasks. While the current processing speed (2.5 FPS) is below real-time requirements, the modular architecture enables targeted optimization of individual components.
 
 ## 5.6 Motion Heatmap Analysis
 
@@ -338,11 +345,11 @@ The heatmap reveals that object motion concentrates in the central portion of th
 
 ## 6.1 Current Limitations
 
-**Processing Speed.** The current 2.5 FPS falls short of the 30 FPS target for real-time operation. The primary bottleneck is the dense Farneback optical flow computation (30% of frame time), followed by YOLOv8 inference (45%). Moving YOLOv8 to GPU and replacing dense flow with sparse flow or a learned alternative would significantly improve throughput.
+**Processing Speed.** The current 2.5 FPS falls short of the 30 FPS target for real-time operation. The primary bottleneck is the dense Farneback optical flow computation (30% of frame time), followed by YOLOv8 inference (45%). Replacing Farneback with SEA-RAFT (Wan et al., 2024), which achieves 2.3x speedup over existing methods at equivalent accuracy, and upgrading to YOLO26 (Soliman et al., 2025), which provides 43% faster CPU inference, would substantially improve throughput.
 
 **Image-Plane Tracking.** The Kalman filter operates in pixel coordinates, where object motion does not correspond to physical motion. Vehicles at different distances appear to move at different pixel velocities even when traveling at the same physical speed. Ground-plane projection, as demonstrated by UCMCTrack, would make predictions physically meaningful.
 
-**Distance Estimation Accuracy.** The current monocular approach assumes known object dimensions and calibrated focal length. Objects of unknown class or varying size introduce systematic errors. Camera calibration with lens distortion correction would improve accuracy.
+**Distance Estimation Accuracy.** The current monocular approach assumes a fixed reference height ($H = 1.7$ m) and calibrated focal length ($f = 353$ pixels), introducing systematic errors for objects of different sizes. The focal length was estimated from camera specifications rather than a formal calibration procedure, and lens distortion is not corrected. Foundation models such as Depth Anything V2 (Yang et al., 2024) and Metric3D v2 (Hu et al., 2024) offer zero-shot metric depth estimation that could replace this geometric approach, though at increased computational cost.
 
 **IoU-Based Association.** IoU decreases rapidly when objects move fast relative to their size, causing track fragmentation. This is particularly problematic for distant small objects. Mapped Mahalanobis Distance or BoostTrack's augmented similarity would improve association robustness.
 
@@ -364,7 +371,7 @@ Based on the literature review and current limitations, the following improvemen
 
 # 7. Conclusion
 
-This paper presented Kiti, a modular obstacle recognition pipeline for autonomous vehicle prototypes that integrates camera motion compensation with deep learning-based detection, multi-object tracking, distance estimation, and trajectory prediction. The key contribution is the regular-grid KLT and RANSAC homography-based camera motion compensation module, which enables traditional motion analysis techniques to function correctly from a moving camera by subtracting estimated ego-motion from the total optical flow field.
+This paper presented Kiti, a modular obstacle recognition pipeline for autonomous vehicle prototypes that integrates camera motion compensation with deep learning-based detection, multi-object tracking, distance estimation, and trajectory prediction. The key contribution is the regular-grid KLT and RANSAC homography-based camera motion compensation module, which enables traditional motion analysis techniques to operate effectively from a moving camera by subtracting estimated ego-motion from the total optical flow field.
 
 Experimental evaluation on real-world driving sequences demonstrated that the pipeline successfully detects and tracks diverse obstacles including pedestrians, vehicles, and animals, with CMC effectively isolating independent object motion from the dominant ego-motion signal. The modular architecture provides a practical framework for iterative improvement, with clear upgrade paths identified from the current literature.
 
@@ -417,5 +424,23 @@ Yi, K., Li, Z., et al. (2024). UCMCTrack: Multi-object tracking with uniform cam
 Yu, Y., Kurnianggoro, L., and Jo, K.-H. (2019). Moving object detection for a moving camera based on global motion compensation and adaptive background model. *International Journal of Control, Automation and Systems*, 17, 1-10.
 
 Zhang, Y., Sun, P., Jiang, Y., Yu, D., Weng, F., Yuan, Z., Luo, P., Liu, W., and Wang, X. (2022). ByteTrack: Multi-object tracking by associating every detection box. In *European Conference on Computer Vision (ECCV)*, pp. 1-21.
+
+Chen, Z., et al. (2025). PD-SORT: Occlusion-robust multi-object tracking using pseudo-depth cues. *arXiv preprint arXiv:2501.11288*.
+
+Hu, M., et al. (2024). Metric3D v2: A versatile monocular geometric foundation model for zero-shot metric depth and surface normal estimation. *IEEE Transactions on Pattern Analysis and Machine Intelligence*.
+
+Maggiolino, G., Ahmad, A., Cao, J., and Kitani, K. (2023). Deep OC-SORT: Multi-pedestrian tracking by adaptive re-identification. In *IEEE International Conference on Image Processing (ICIP)*.
+
+Soliman, A., et al. (2025). YOLO26: Real-time object detection with edge optimization. *arXiv preprint arXiv:2509.25164*.
+
+Stanojevic, V., Todorovic, V., and Bhatt, N. (2024). BoostTrack++: Using tracklet information to detect more objects in multiple object tracking. *arXiv preprint arXiv:2408.13003*.
+
+Vu, T., et al. (2025). HybridTrack: A hybrid approach for robust multi-object tracking. *IEEE Robotics and Automation Letters / ICRA 2026*. *arXiv preprint arXiv:2501.01275*.
+
+Wan, Z., et al. (2024). SEA-RAFT: Simple, efficient, accurate RAFT for optical flow. In *European Conference on Computer Vision (ECCV)*, Oral.
+
+Wang, A., et al. (2024b). YOLOv10: Real-time end-to-end object detection. *arXiv preprint arXiv:2405.14458*.
+
+Yang, L., et al. (2024). Depth Anything V2. In *Advances in Neural Information Processing Systems (NeurIPS)*.
 
 Zivkovic, Z. (2004). Improved adaptive Gaussian mixture model for background subtraction. In *International Conference on Pattern Recognition (ICPR)*, pp. 28-31.

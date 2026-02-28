@@ -272,6 +272,81 @@ Identified 15+ new papers relevant to the pipeline improvements:
 
 ---
 
+## 2026-02-28
+
+### Work Done
+
+**1. GitHub Project Roadmap Update**
+- Marked 4 items as Done: Research CMC, Research Dynamic Motion, Combine Pipeline, Implement CMC
+- Added 8 new items: Algorithm Flow Chart (Done), Pseudo Code (Done), Research Paper Draft (In Progress), Road Condition Recognition, Traffic Sign Recognition, Road Slope Detection, EMAP Integration, Module Fusion
+- Total: 16 items (6 Done, 1 In Progress, 9 Todo)
+
+**2. CMC Comparison Experiment (Figure 3)**
+- Ran pipeline twice on Seq-1 (300 frames): with CMC and without CMC
+- Generated side-by-side heatmap comparison at `docs/figures/cmc_comparison_heatmap.png`
+- Quantitative results: RANSAC inlier ratio mean=0.983 (σ=0.034), min=0.795, max=1.000
+- Detection/tracking metrics identical (CMC affects flow/BG subtraction, not YOLO/SORT)
+- 92% of frames had inlier ratios above 0.95
+
+**3. Annotated Frame Extraction (Figure 2)**
+- Extracted frame 150 from annotated video to `docs/figures/sample_annotated_frame.png`
+- Shows bounding boxes, track IDs, distance estimates, and ROI overlay
+
+**4. Research Paper Enhancement (paper.md: 422 → 446 lines)**
+- Based on comprehensive literature review (15+ new papers found):
+  - Fixed factual error: YOLOv8 no longer claimed as "latest" — added YOLOv10, YOLO26
+  - Corrected SORT state vector description (7D, not 4D)
+  - Added 6 new methods to Related Work: Deep OC-SORT, BoostTrack++, HybridTrack, PD-SORT, Depth Anything V2, SEA-RAFT
+  - Expanded comparison table with 3 new methods + FPS measurement caveat footnote
+  - Rewrote CMC analysis section with quantitative inlier ratio data
+  - Added hardware specs (AMD Ryzen, CUDA 12.8, PyTorch 2.10)
+  - Justified OR mask combination strategy (complementary failure modes)
+  - Improved scientific writing quality (removed informal language)
+  - Added 9 new references (total: 33)
+  - Concrete upgrade paths in Discussion: SEA-RAFT, YOLO26, Depth Anything V2, Metric3D v2
+
+**5. Key Methodological Gaps Identified (for future work)**
+- No standard MOT metrics (HOTA, MOTA, IDF1) — need ground truth annotations
+- No distance estimation validation against reference measurements
+- No ablation studies (grid spacing, motion threshold, mask combination strategy)
+- Results shown for only 300 frames of 1 sequence — need full evaluation on all 4 sequences
+- Trajectory prediction not evaluated (no ADE/FDE metrics)
+- Planar assumption failure cases not analyzed
+
+### Decisions Made
+1. CMC ablation shows identical detection/tracking (by design — CMC only affects flow/BG subtraction)
+2. Paper needs quantitative ground truth evaluation before submission — flagged as next priority
+3. More pseudocode will be added as new features are implemented (per README features list)
+4. User already added images to docx manually — generator script serves as clean rebuild template
+
+### GitHub Project Updates
+- 6 items marked Done, 1 In Progress, 9 Todo
+- New items track all README features + research priorities
+
+### Image Placeholders Status (all figures now exist)
+
+| # | Description | Path | Status |
+|---|-------------|------|--------|
+| 1 | Pipeline architecture diagram | `docs/figures/pipeline_architecture.png` | **CREATED** |
+| 2 | Sample annotated frame | `docs/figures/sample_annotated_frame.png` | **CREATED** |
+| 3 | CMC comparison heatmap | `docs/figures/cmc_comparison_heatmap.png` | **CREATED** |
+| 4 | Processing time plot | `output/2026-02-28/with_cmc/..._performance.png` | **EXISTS** |
+| 5 | Motion heatmap | `output/2026-02-28/with_cmc/..._heatmap.png` | **EXISTS** |
+
+### Next Steps
+1. Run pipeline on all 4 test sequences for full experimental results
+2. Create ground truth annotations for at least 1 sequence (for MOT metrics)
+3. Add ablation studies: grid spacing, motion threshold, YOLO confidence
+4. Begin EMAP integration (highest priority pipeline improvement)
+5. Add pseudocode for future features: traffic sign recognition, road condition, slope detection
+6. Update docx with all new figures and content
+
+### Blockers/Questions
+- Ground truth annotation tool needed (CVAT or similar) for quantitative evaluation
+- Should ablation studies prioritize CMC parameters or tracking parameters?
+
+---
+
 ## Template for Future Entries
 
 ```markdown
